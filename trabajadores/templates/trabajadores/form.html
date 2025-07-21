@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Formulario Trabajador{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" class="bg-white p-4 rounded shadow">
+  {% csrf_token %}
+  <h3 class="text-center mb-4 text-dark">
+    {% if form.instance.pk %}
+      <i class="fas fa-user-edit"></i> Editar Trabajador
+    {% else %}
+      <i class="fas fa-user-plus"></i> Agregar Trabajador
+    {% endif %}
+  </h3>
+
+  <div class="row">
+    <div class="col-md-6">{% include "components/campo_input.html" with field=form.nombres %}</div>
+    <div class="col-md-6">{% include "components/campo_input.html" with field=form.apellidos %}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-4">{% include "components/campo_input.html" with field=form.edad %}</div>
+    <div class="col-md-4">{% include "components/campo_fecha.html" with field=form.fecha %}</div>
+    <div class="col-md-4">{% include "components/campo_email.html" with field=form.email %}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">{% include "components/campo_telefono.html" with field=form.telefono_casa %}</div>
+    <div class="col-md-6">{% include "components/campo_telefono.html" with field=form.telefono_movil %}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">{% include "components/campo_dinero.html" with field=form.sueldo_base %}</div>
+    <div class="col-md-6">{% include "components/campo_dinero.html" with field=form.comision %}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">{% include "components/campo_password.html" with field=form.password %}</div>
+    <div class="col-md-6">{% include "components/campo_imagen.html" with field=form.foto instance=form.instance %}</div>
+  </div>
+
+  <div class="d-flex justify-content-between mt-4">
+    <button type="submit" class="btn btn-primary">
+      <i class="fas fa-save"></i> {% if form.instance.pk %}Actualizar{% else %}Agregar{% endif %}
+    </button>
+    <a href="{% url 'trabajadores:listar' %}" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancelar
+    </a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,11 @@
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+  {{ field }}
+  {% if field.errors %}
+    <div class="invalid-feedback d-block">
+      {% for error in field.errors %}
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

@@ -26,7 +26,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-vte!anxul=noz+t*3e1_ysnn5cc79jo0bwvi)f7hnf_eq=$4@k'
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -69,7 +68,7 @@ TEMPLATES = [
              BASE_DIR / 'trabajadores/templates/',
              BASE_DIR / 'usuarios/templates/', # <--- ¡ASEGÚRATE DE AÑADIR ESTA LÍNEA!
             # Si tienes plantillas globales que no pertenecen a ninguna app, puedes añadirlas aquí
-            # BASE_DIR / 'templates',
+             BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {

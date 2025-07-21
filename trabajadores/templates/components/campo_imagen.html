@@ -1,0 +1,17 @@
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+  {{ field }}
+  {% if instance and instance.foto %}
+    <div class="mt-2">
+      <strong>Actual:</strong><br>
+      <img src="{{ instance.foto.url }}" alt="Foto actual" class="img-thumbnail" width="100">
+    </div>
+  {% endif %}
+  {% if field.errors %}
+    <div class="invalid-feedback d-block">
+      {% for error in field.errors %}
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

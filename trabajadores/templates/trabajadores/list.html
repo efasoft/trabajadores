@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Listado de Trabajadores{% endblock %}
+{% block content %}
+<h1 class="text-white">Trabajadores</h1>
+<a href="{% url 'trabajadores:crear' %}" class="btn btn-primary mb-3">
+  <i class="fas fa-user-plus"></i> Agregar
+</a>
+<table class="table table-striped bg-light">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Email</th>
+      <th>Teléfono</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in trabajadores %}
+    <tr>
+      <td>{{ t.nombres }} {{ t.apellidos }}</td>
+      <td>{{ t.email }}</td>
+      <td>{{ t.telefono_movil }}</td>
+      <td>
+        <a href="{% url 'trabajadores:editar' t.id %}" class="btn btn-sm btn-warning">
+          <i class="fas fa-edit"></i>
+        </a>
+        <a href="{% url 'trabajadores:eliminar' t.id %}" class="btn btn-sm btn-danger">
+          <i class="fas fa-trash-alt"></i>
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
