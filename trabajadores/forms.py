@@ -1,44 +1,38 @@
 from django import forms
 from .models import Trabajador
-from .validators import TrabajadorSchema
+from .validators import TrabajadorModel
 from pydantic import ValidationError
-from django.core.exceptions import ValidationError as DjangoValidationError
 
 class TrabajadorForm(forms.ModelForm):
-    fecha = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'DD-MM-AAAA'})
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        min_length=8
-    )
-    foto = forms.ImageField(required=False)
-
     class Meta:
         model = Trabajador
-        exclude = ['sueldo_bruto', 'eliminado']
+        fields = [
+            'nombres', 'apellidos', 'edad', 'fecha', 'email',
+            'telefono_casa', 'telefono_movil', 'sueldo_base',
+            'comision', 'password', 'foto', 'activo'
+        ]
         widgets = {
-            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
-            'edad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefono_casa': forms.TextInput(attrs={'class': 'form-control'}),
-            'telefono_movil': forms.TextInput(attrs={'class': 'form-control'}),
-            'sueldo_base': forms.TextInput(attrs={'class': 'form-control'}),
-            'comision': forms.TextInput(attrs={'class': 'form-control'}),
+            'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'password': forms.PasswordInput(render_value=True),
         }
 
     def clean(self):
         cleaned_data = super().clean()
+
+        # Capturar la ruta del archivo si está disponible
+        foto = cleaned_data.get('foto')
+        foto_value = foto.name if foto else None
+        cleaned_data['foto'] = foto_value
+
         try:
-            trabajador_schema = TrabajadorSchema(**cleaned_data)
+            TrabajadorModel(**cleaned_data)
         except ValidationError as e:
-            raise DjangoValidationError({err['loc'][0]: err['msg'] for err in e.errors()})
+            for error in e.errors():
+                loc = error.get('loc', [])
+                field = loc[0] if loc else '__all__'
+                message = error['msg']
+                self.add_error(field, message)
         return cleaned_data
 
-    def clean_foto(self):
-        foto = self.cleaned_data.get('foto')
-        if not self.instance.pk and not foto:
-            raise forms.ValidationError("Debe cargar una imagen.")
-        return foto
+
 

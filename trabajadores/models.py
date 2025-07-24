@@ -1,26 +1,32 @@
 from django.db import models
-from django.contrib.auth.hashers import make_password
 
 class Trabajador(models.Model):
     nombres = models.CharField(max_length=60)
     apellidos = models.CharField(max_length=60)
     edad = models.PositiveIntegerField()
     fecha = models.DateField()
-    email = models.EmailField(unique=True)
-    telefono_casa = models.CharField(max_length=15)
-    telefono_movil = models.CharField(max_length=15)
+    email = models.EmailField()
+    telefono_casa = models.CharField(max_length=9)
+    telefono_movil = models.CharField(max_length=9)
     sueldo_base = models.DecimalField(max_digits=10, decimal_places=2)
     comision = models.DecimalField(max_digits=10, decimal_places=2)
-    sueldo_bruto = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
     password = models.CharField(max_length=128)
-    foto = models.ImageField(upload_to='fotos/')
-    eliminado = models.BooleanField(default=False)
+    foto = models.ImageField(upload_to='trabajadores_fotos/')
+    activo = models.BooleanField(default=True)
 
-    def save(self, *args, **kwargs):
-        self.sueldo_bruto = self.sueldo_base + self.comision
-        if not self.pk or 'password' in self.get_deferred_fields():
-            self.password = make_password(self.password)
-        super().save(*args, **kwargs)
+    class Meta:
+        verbose_name = 'Trabajador'
+        verbose_name_plural = 'Trabajadores'
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+
+    @property
+    def sueldo_bruto(self):
+      if self.sueldo_base is None or self.comision is None:
+          return 0
+      return self.sueldo_base + self.comision
+
+
+
+

@@ -155,10 +155,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-LOGIN_URL = reverse_lazy('usuarios:login') # <--- CAMBIA ESTA LÍNEA
-
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/usuarios/login/' # También usa la ruta absoluta aquí
+LOGIN_URL = 'usuarios:login'
+LOGIN_REDIRECT_URL = 'trabajadores:home'
+LOGOUT_REDIRECT_URL = 'usuarios:login'
 
 ROOT_URLCONF = 'form_trabajadores.urls' # Asegúrate de que esta línea esté así
 

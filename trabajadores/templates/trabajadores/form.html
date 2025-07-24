@@ -1,45 +1,55 @@
-{% extends "base.html" %}
-{% block title %}Formulario Trabajador{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} Trabajador{% endblock %}
 {% block content %}
-<form method="post" enctype="multipart/form-data" class="bg-white p-4 rounded shadow">
-  {% csrf_token %}
-  <h3 class="text-center mb-4 text-dark">
-    {% if form.instance.pk %}
-      <i class="fas fa-user-edit"></i> Editar Trabajador
-    {% else %}
-      <i class="fas fa-user-plus"></i> Agregar Trabajador
-    {% endif %}
-  </h3>
+<style>
+  body { background: linear-gradient(to right, #6dd5ed, #c05fc7); }
+  .card { background:white; padding:2rem; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.2); max-width:700px; margin:auto; margin-top:3vh; }
+  .form-label { font-weight:600; }
+  .form-control { width:100%; padding:.5rem; margin-bottom:1rem; border-radius:5px; border:1px solid #ccc; }
+  .password-wrapper, .file-wrapper { position:relative; }
+  .toggle-password { position:absolute; right:15px; top:38px; cursor:pointer; font-size:.9rem; color:#555; }
+  .btn-group { display:flex; justify-content:space-between; margin-top:1.5rem; }
+  .btn-primary, .btn-secondary { padding:.6rem 1.2rem; border:none; border-radius:5px; color:white; font-weight:bold; cursor:pointer; }
+  .btn-primary { background:#28a745; }
+  .btn-secondary { background:#6c757d; }
+  .btn-primary:hover, .btn-secondary:hover { opacity:0.9; }
+</style>
 
-  <div class="row">
-    <div class="col-md-6">{% include "components/campo_input.html" with field=form.nombres %}</div>
-    <div class="col-md-6">{% include "components/campo_input.html" with field=form.apellidos %}</div>
-  </div>
-  <div class="row">
-    <div class="col-md-4">{% include "components/campo_input.html" with field=form.edad %}</div>
-    <div class="col-md-4">{% include "components/campo_fecha.html" with field=form.fecha %}</div>
-    <div class="col-md-4">{% include "components/campo_email.html" with field=form.email %}</div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">{% include "components/campo_telefono.html" with field=form.telefono_casa %}</div>
-    <div class="col-md-6">{% include "components/campo_telefono.html" with field=form.telefono_movil %}</div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">{% include "components/campo_dinero.html" with field=form.sueldo_base %}</div>
-    <div class="col-md-6">{% include "components/campo_dinero.html" with field=form.comision %}</div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">{% include "components/campo_password.html" with field=form.password %}</div>
-    <div class="col-md-6">{% include "components/campo_imagen.html" with field=form.foto instance=form.instance %}</div>
-  </div>
+<div class="card">
+  <h3 style="text-align:center; margin-bottom:1.5rem;">{{ titulo }} Trabajador</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form.visible_fields %}
+      <div class="form-group{% if field.name in ['password'] %} password-wrapper{% endif %}{% if field.name == 'foto' %} file-wrapper{% endif %}">
+        <label class="form-label">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
+        {{ field }}
+        {% if field.errors %}<div style="color:red;font-size:.9rem;">{{ field.errors|first }}</div>{% endif %}
+        {% if field.name == 'password' %}
+          <span class="toggle-password" onclick="togglePassword()">👁 Mostrar</span>
+        {% endif %}
+        {% if field.name == 'foto' and form.instance.pk and form.instance.foto %}
+          <p>Archivo actual: {{ form.instance.foto.name }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <div class="form-group">
+      <label class="form-label">Sueldo Bruto</label>
+      <input class="form-control" value="{{ form.instance.sueldo_bruto }}" readonly>
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn-primary">Guardar</button>
+      <a href="{% url 'trabajadores:listar' %}" class="btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
 
-  <div class="d-flex justify-content-between mt-4">
-    <button type="submit" class="btn btn-primary">
-      <i class="fas fa-save"></i> {% if form.instance.pk %}Actualizar{% else %}Agregar{% endif %}
-    </button>
-    <a href="{% url 'trabajadores:listar' %}" class="btn btn-secondary">
-      <i class="fas fa-times"></i> Cancelar
-    </a>
-  </div>
-</form>
+<script>
+function togglePassword() {
+  const pwd = document.getElementById('id_password');
+  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+}
+</script>
 {% endblock %}
+
+
+

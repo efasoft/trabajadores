@@ -1,45 +1,56 @@
-/* Fondo degradado principal del proyecto */
 body {
-    background: #b6d8e3;
-    background: linear-gradient(106deg, rgba(182, 216, 227, 1) 0%, rgba(87, 199, 162, 0.9) 15%, rgba(121, 145, 201, 1) 61%, rgba(191, 114, 204, 1) 100%);
-    min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  /* Estilo para botones personalizados con degradado */
-  .btn-primary {
-    background: linear-gradient(71deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 13%, rgba(0, 212, 255, 1) 100%);
-    border: none;
-    color: #fff;
-  }
-  
-  .btn-primary:hover {
-    opacity: 0.9;
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
-  }
-  
-  .btn-secondary {
-    background-color: #444;
-    color: white;
-  }
-  
-  input, select, textarea {
-    border-radius: 10px !important;
-  }
-  
-  label {
-    font-weight: bold;
-  }
-  
-  .form-control:focus {
-    box-shadow: 0 0 5px rgba(121, 145, 201, 0.8);
-  }
-  
-  /* Imagen previa */
-  .preview-img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 12px;
-    margin-top: 10px;
-  }
-  
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.btn-gradient {
+  background: linear-gradient(71deg, rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 13%, rgba(0, 212, 255, 1) 100%);
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: background 0.3s ease-in-out;
+}
+
+.btn-gradient:hover {
+  opacity: 0.9;
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="file"] {
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: white;
+  padding: 8px;
+}
+
+.text-color-degradado {
+  font-family: Jost, sans-serif;
+  font-weight: bold;
+  font-size: 4rem;
+  background-image: linear-gradient(var(--angle), hotpink, indigo);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  animation: move 4s linear alternate infinite;
+}
+
+@keyframes move {
+  0% { --angle: 0.25turn }
+  100% { --angle: 0.75turn }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0turn;
+}

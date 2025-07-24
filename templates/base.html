@@ -1,44 +1,85 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>{% block title %}Trabajadores{% endblock %}</title>
+    <meta charset="UTF-8">
+    <title>{% block title %}Gestión de Trabajadores{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #6dd5ed, #2193b0, #9b59b6);
+            min-height: 100vh;
+        }
 
-  <!-- Bootstrap 5 desde CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        header {
+            background-color: #222;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-  <!-- FontAwesome Free -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
 
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        .container {
+            padding: 20px;
+        }
 
-  <!-- CSS personalizado -->
-  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+        .btn-link {
+            border: none;
+            background: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            padding: 0;
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">Gestión de Trabajadores</a>
-      <div class="d-flex">
-        {% if user.is_authenticated %}
-          <span class="text-white me-2">Hola, {{ user.username }}</span>
-          <a class="btn btn-outline-light btn-sm" href="{% url 'usuarios:logout' %}">Cerrar sesión</a>
-        {% else %}
-          <a class="btn btn-outline-light btn-sm" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
-        {% endif %}
-      </div>
+    <header>
+        <div>Gestión de Trabajadores</div>
+        <nav>
+            <a href="{% url 'home' %}">Inicio</a>
+            <a href="{% url 'trabajadores:listar' %}">Trabajadores</a>
+            {% if user.is_authenticated %}
+                <button class="btn-link" onclick="confirmarCerrarSesion()">Cerrar sesión</button>
+            {% else %}
+                <a href="{% url 'usuarios:login' %}">Iniciar sesión</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container">
+        {% block content %}{% endblock %}
     </div>
-  </nav>
 
-  <div class="container py-4">
-    {% block content %}
-    {% endblock %}
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{% static 'js/scripts.js' %}"></script>
+    <script>
+    function confirmarCerrarSesion() {
+        Swal.fire({
+            title: "¿Cerrar sesión?",
+            text: "¿Estás seguro de que deseas salir?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, cerrar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'usuarios:logout' %}";
+            }
+        });
+    }
+    </script>
 </body>
 </html>

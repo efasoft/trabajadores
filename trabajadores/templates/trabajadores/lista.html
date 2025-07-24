@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Trabajadores{% endblock %}
+{% block content %}
+<style>
+  body { background: linear-gradient(to right, #6dd5ed, #c05fc7); }
+  .card { background:white; padding:1.5rem; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.2); margin:auto; margin-top:3vh; max-width:90%; }
+  .btn-primary { background:#007bff; color:white; padding:.5rem .8rem; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
+  .btn-primary:hover { opacity:0.9; }
+  .table { width:100%; border-collapse:collapse; }
+  .table th, .table td { padding:.75rem; border:1px solid #dee2e6; }
+  .table th { background:#f8f9fa; }
+  .btn-sm { padding:.3rem .5rem; border:none; border-radius:4px; cursor:pointer; }
+  .btn-info { background:#17a2b8; color:white; }
+  .btn-danger { background:#dc3545; color:white; }
+  .btn-info:hover, .btn-danger:hover { opacity:0.9; }
+</style>
+
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h3>Trabajadores</h3>
+    <a href="{% url 'trabajadores:crear' %}" class="btn-primary"><i class="fas fa-plus"></i> Agregar</a>
+  </div>
+  <table class="table">
+    <thead>
+      <tr><th>Nombre</th><th>Email</th><th>Activo</th><th>Sueldo Bruto</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      {% for t in trabajadores %}
+      <tr>
+        <td>{{ t.nombres }} {{ t.apellidos }}</td>
+        <td>{{ t.email }}</td>
+        <td>{{ t.activo }}</td>
+        <td>{{ t.sueldo_bruto }}</td>
+        <td>
+          <a href="{% url 'trabajadores:editar' t.id %}" class="btn-sm btn-info"><i class="fas fa-edit"></i></a>
+          <button onclick="confirmDel({{ t.id }})" class="btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;">No hay trabajadores</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function confirmDel(id) {
+  Swal.fire({
+    title:'¿Eliminar?',
+    text:'No se puede deshacer',
+    icon:'warning',
+    showCancelButton:true,
+    confirmButtonText:'Sí, eliminar',
+    cancelButtonText:'Cancelar'
+  }).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
+}
+</script>
+{% endblock %}
+
+
+
+

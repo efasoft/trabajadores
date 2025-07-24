@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<style>
+  .dashboard-card {
+    background: rgba(255,255,255,0.9);
+    border-radius: 10px;
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 700px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  }
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #ececec;
+  }
+  .stat:last-child { border-bottom: none; }
+  .stat-label { font-weight: 600; }
+  .stat-value { font-size: 1.2rem; color: #007bff; }
+</style>
+
+<div class="dashboard-card">
+  <h2 style="text-align:center; margin-bottom:1.5rem;">📊 Panel de Control</h2>
+  <div class="stat">
+    <div class="stat-label">Total Trabajadores</div>
+    <div class="stat-value">{{ total_trabajadores }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Activos</div>
+    <div class="stat-value">{{ activos_count }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Inactivos</div>
+    <div class="stat-value">{{ inactivos_count }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Promedio Sueldo Bruto</div>
+    <div class="stat-value">{{ promedio_sueldo_bruto }}</div>
+  </div>
+</div>
+{% endblock %}
+

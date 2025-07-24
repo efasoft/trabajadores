@@ -1,48 +1,75 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from .models import Trabajador
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from .forms import TrabajadorForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect
-from django.contrib import messages
+from .models import Trabajador
 
-class TrabajadorListView(LoginRequiredMixin, ListView):
-    model = Trabajador
-    template_name = 'trabajadores/list.html'
-    context_object_name = 'trabajadores'
 
-    def get_queryset(self):
-        return Trabajador.objects.filter(eliminado=False)
 
-class TrabajadorCreateView(LoginRequiredMixin, CreateView):
-    model = Trabajador
-    form_class = TrabajadorForm
-    template_name = 'trabajadores/form.html'
-    success_url = reverse_lazy('trabajadores:listar')
+@login_required
+def home(request):
+    trabajadores = Trabajador.objects.all()
+    total = trabajadores.count()
+    activos = trabajadores.filter(activo=True).count()
+    inactivos = trabajadores.filter(activo=False).count()
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Trabajador agregado correctamente.')
-        return super().form_valid(form)
+    if trabajadores:
+        promedio = sum(t.sueldo_bruto for t in trabajadores) / len(trabajadores)
+    else:
+        promedio = 0
 
-class TrabajadorUpdateView(LoginRequiredMixin, UpdateView):
-    model = Trabajador
-    form_class = TrabajadorForm
-    template_name = 'trabajadores/form.html'
-    success_url = reverse_lazy('trabajadores:listar')
+    context = {
+        'total': total,
+        'activos': activos,
+        'inactivos': inactivos,
+        'promedio': round(promedio, 2)
+    }
+    return render(request, 'trabajadores/home.html', context)
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Datos actualizados correctamente.')
-        return super().form_valid(form)
+@login_required
+def crear_trabajador(request):
+    if request.method == 'POST':
+        form = TrabajadorForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('trabajadores:listar')
+        # Si hay errores de validación, se renderiza con errores
+        return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Crear'})
+    else:
+        form = TrabajadorForm()
+        return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Crear'})
 
-class TrabajadorDeleteView(LoginRequiredMixin, DeleteView):
-    model = Trabajador
-    template_name = 'trabajadores/confirm_delete.html'
-    success_url = reverse_lazy('trabajadores:listar')
+@login_required
+def editar_trabajador(request, trabajador_id):
+    trabajador = get_object_or_404(Trabajador, id=trabajador_id)
 
-    def post(self, request, *args, **kwargs):
-        trabajador = self.get_object()
-        trabajador.eliminado = True
-        trabajador.save()
-        messages.success(request, 'Trabajador eliminado suavemente.')
-        return redirect(self.success_url)
+    if request.method == 'POST':
+        form = TrabajadorForm(request.POST, request.FILES, instance=trabajador)
+        if form.is_valid():
+            form.save()
+            return redirect('trabajadores:listar')
+        # Reenviar formulario con errores
+        return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Editar'})
+    else:
+        form = TrabajadorForm(instance=trabajador)
+        return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Editar'})
+
+@login_required
+def listar_trabajadores(request):
+    trabajadores = Trabajador.objects.all()
+    return render(request, 'trabajadores/lista.html', {'trabajadores': trabajadores})
+
+@login_required
+def eliminar_trabajador(request, trabajador_id):
+    try:
+        trabajador = Trabajador.objects.get(pk=trabajador_id)
+        trabajador.delete()
+        messages.success(request, "Trabajador eliminado correctamente.")
+    except Trabajador.DoesNotExist:
+        messages.error(request, "El trabajador no existe.")
+    return HttpResponseRedirect(reverse('trabajadores:listar'))    
+
+
+
+
+
 
