@@ -1,159 +1,147 @@
 {% extends 'base.html' %}
-{% block title %}{{ titulo }} Trabajador{% endblock %}
+{% load widget_tweaks %}
+
 {% block content %}
-<style>
-  body { background: linear-gradient(to right, #6dd5ed, #c05fc7); }
-  .card { background:white; padding:2rem; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.2); max-width:700px; margin:auto; margin-top:3vh; }
-  .form-label { font-weight:600; }
-  .form-control { width:100%; padding:.5rem; margin-bottom:1rem; border-radius:5px; border:1px solid #ccc; }
-  .password-wrapper, .file-wrapper { position:relative; }
-  .toggle-password { position:absolute; right:15px; top:38px; cursor:pointer; font-size:.9rem; color:#555; }
-  .btn-group { display:flex; justify-content:space-between; margin-top:1.5rem; }
-  .btn-primary, .btn-secondary { padding:.6rem 1.2rem; border:none; border-radius:5px; color:white; font-weight:bold; cursor:pointer; }
-  .btn-primary { background:#28a745; }
-  .btn-secondary { background:#6c757d; }
-  .btn-primary:hover, .btn-secondary:hover { opacity:0.9; }
-</style>
 <div class="container py-5">
   <div class="row justify-content-center">
-      <div class="col-md-10">
-          <div class="card shadow-lg">
-              <div class="card-header bg-gradient text-white text-center">
-                  <h3>{{ accion }} Trabajador</h3>
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header text-white text-center rounded-top-4" style="background: linear-gradient(to right, #6a11cb, #2575fc);">
+          <h4 class="mb-0 py-2">{{ accion }} Trabajador</h4>
+        </div>
+
+        <div class="card-body px-5 py-4">
+          <form method="POST" enctype="multipart/form-data" id="trabajadorForm">
+            {% csrf_token %}
+
+            <!-- Nombres -->
+            <div class="mb-3">
+              <label for="id_nombres" class="form-label">Nombres</label>
+              {{ form.nombres|add_class:"form-control" }}
+            </div>
+
+            <!-- Apellidos -->
+            <div class="mb-3">
+              <label for="id_apellidos" class="form-label">Apellidos</label>
+              {{ form.apellidos|add_class:"form-control" }}
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="id_email" class="form-label">Correo Electrónico</label>
+              {{ form.email|add_class:"form-control" }}
+            </div>
+
+            <!-- Fecha -->
+            <div class="mb-3">
+              <label for="id_fecha" class="form-label">Fecha de ingreso</label>
+              {{ form.fecha|add_class:"form-control" }}
+            </div>
+
+            <!-- Edad -->
+            <div class="mb-3">
+              <label for="id_edad" class="form-label">Edad</label>
+              {{ form.edad|add_class:"form-control" }}
+            </div>
+
+            <!-- Teléfonos -->
+            <div class="mb-3">
+              <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
+              {{ form.telefono_casa|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
+              {{ form.telefono_movil|add_class:"form-control" }}
+            </div>
+
+            <!-- Sueldo y Comisión -->
+            <div class="mb-3">
+              <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
+              {{ form.sueldo_base|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="id_comision" class="form-label">Comisión (%)</label>
+              {{ form.comision|add_class:"form-control" }}
+            </div>
+
+            <!-- Foto -->
+            <div class="mb-3">
+              <label for="id_foto" class="form-label">Foto</label>
+              {{ form.foto|add_class:"form-control" }}
+            </div>
+
+            <!-- Activo -->
+            <div class="form-check mb-3">
+              {{ form.activo|add_class:"form-check-input" }}
+              <label class="form-check-label ms-1" for="id_activo">¿Activo?</label>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Contraseña</label>
+              <div class="input-group">
+                {{ form.password|add_class:"form-control" }}
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">👁</button>
               </div>
-              <div class="card-body">
-                  <form method="POST" enctype="multipart/form-data">
-                      {% csrf_token %}
+            </div>
 
-                      <!-- Nombres -->
-                      <div class="mb-3">
-                          <label for="id_nombres" class="form-label">Nombres</label>
-                          {{ form.nombres }}
-                          {% if 'nombres' in form.errors %}
-                              <div class="text-danger">{{ form.errors.nombres.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Apellidos -->
-                      <div class="mb-3">
-                          <label for="id_apellidos" class="form-label">Apellidos</label>
-                          {{ form.apellidos }}
-                          {% if 'apellidos' in form.errors %}
-                              <div class="text-danger">{{ form.errors.apellidos.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Email -->
-                      <div class="mb-3">
-                          <label for="id_email" class="form-label">Correo Electrónico</label>
-                          {{ form.email }}
-                          {% if 'email' in form.errors %}
-                              <div class="text-danger">{{ form.errors.email.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Fecha -->
-                      <div class="mb-3">
-                          <label for="id_fecha" class="form-label">Fecha de ingreso</label>
-                          {{ form.fecha }}
-                          {% if 'fecha' in form.errors %}
-                              <div class="text-danger">{{ form.errors.fecha.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Edad -->
-                      <div class="mb-3">
-                          <label for="id_edad" class="form-label">Edad</label>
-                          {{ form.edad }}
-                          {% if 'edad' in form.errors %}
-                              <div class="text-danger">{{ form.errors.edad.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Teléfono Casa -->
-                      <div class="mb-3">
-                          <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
-                          {{ form.telefono_casa }}
-                          {% if 'telefono_casa' in form.errors %}
-                              <div class="text-danger">{{ form.errors.telefono_casa.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Teléfono Móvil -->
-                      <div class="mb-3">
-                          <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
-                          {{ form.telefono_movil }}
-                          {% if 'telefono_movil' in form.errors %}
-                              <div class="text-danger">{{ form.errors.telefono_movil.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Sueldo Base -->
-                      <div class="mb-3">
-                          <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
-                          {{ form.sueldo_base }}
-                          {% if 'sueldo_base' in form.errors %}
-                              <div class="text-danger">{{ form.errors.sueldo_base.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Comisión -->
-                      <div class="mb-3">
-                          <label for="id_comision" class="form-label">Comisión (%)</label>
-                          {{ form.comision }}
-                          {% if 'comision' in form.errors %}
-                              <div class="text-danger">{{ form.errors.comision.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Foto -->
-                      <div class="mb-3">
-                          <label for="id_foto" class="form-label">Foto</label>
-                          {{ form.foto }}
-                          {% if 'foto' in form.errors %}
-                              <div class="text-danger">{{ form.errors.foto.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Activo -->
-                      <div class="mb-3 form-check">
-                          {{ form.activo }}
-                          <label for="id_activo" class="form-check-label">¿Activo?</label>
-                          {% if 'activo' in form.errors %}
-                              <div class="text-danger">{{ form.errors.activo.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <!-- Contraseña -->
-                      <div class="mb-3">
-                          <label for="id_password" class="form-label">Contraseña</label>
-                          <div class="input-group">
-                              {{ form.password }}
-                              <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">👁</button>
-                          </div>
-                          {% if 'password' in form.errors %}
-                              <div class="text-danger">{{ form.errors.password.0 }}</div>
-                          {% endif %}
-                      </div>
-
-                      <div class="text-center">
-                          <button type="submit" class="btn btn-success px-4">{{ accion }}</button>
-                          <a href="{% url 'trabajadores:listar' %}" class="btn btn-secondary ms-2">Cancelar</a>
-                      </div>
-                  </form>
-              </div>
-          </div>
+            <!-- Botones -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary btn-gradient px-4"> {{ accion }} </button>
+              <a href="{% url 'trabajadores:listar' %}" class="btn btn-secondary btn-gradient ms-2">Cancelar</a>
+            </div>
+          </form>
+        </div>
       </div>
+    </div>
   </div>
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 function togglePassword() {
-  const pwd = document.getElementById('id_password');
-  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  const input = document.getElementById("id_password");
+  input.type = input.type === "password" ? "text" : "password";
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const errores = {
+    {% for field in form %}
+      {% if field.errors %}
+        "{{ field.label }}": "{{ field.errors|join:', ' }}",
+      {% endif %}
+    {% endfor %}
+  };
+
+  if (Object.keys(errores).length > 0) {
+    let mensaje = "";
+    for (let campo in errores) {
+      mensaje += `<b>${campo}</b>: ${errores[campo]}<br>`;
+    }
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Errores en el formulario',
+      html: mensaje,
+      confirmButtonColor: '#e74c3c',
+      confirmButtonText: 'Entendido'
+    });
+  }
+});
 </script>
+
+<style>
+  .btn-gradient {
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+    border: none;
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(to right, #2575fc, #6a11cb);
+  }
+</style>
 {% endblock %}
-
-
-

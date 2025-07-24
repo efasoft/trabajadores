@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'trabajadores',
     'usuarios',   
     'crispy_forms',
-    'crispy_bootstrap5',       
+    'crispy_bootstrap5',    
+    "widget_tweaks",   
 ]
 
 MIDDLEWARE = [
