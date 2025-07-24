@@ -25,7 +25,7 @@ class TrabajadorModel(BaseModel):
     @field_validator('edad')
     def edad_valida(cls, v):
         if not (18 <= v <= 100):
-            raise ValueError('Edad debe estar entre 18 y 100')
+            raise ValueError('Atención : Edad debe estar entre 18 y 100')
         return v
 
     @field_validator('telefono_casa')
@@ -49,7 +49,7 @@ class TrabajadorModel(BaseModel):
     @field_validator('password')
     def validar_password(cls, v):
         if len(v) < 8:
-            raise ValueError('Contraseña mínima de 8 caracteres')
+            raise ValueError('Atención : Contraseña mínima de 8 caracteres')
         return v
 
     @field_validator('foto')

@@ -21,23 +21,41 @@
   .stat-value { font-size: 1.2rem; color: #007bff; }
 </style>
 
-<div class="dashboard-card">
-  <h2 style="text-align:center; margin-bottom:1.5rem;">📊 Panel de Control</h2>
-  <div class="stat">
-    <div class="stat-label">Total Trabajadores</div>
-    <div class="stat-value">{{ total_trabajadores }}</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Activos</div>
-    <div class="stat-value">{{ activos_count }}</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Inactivos</div>
-    <div class="stat-value">{{ inactivos_count }}</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Promedio Sueldo Bruto</div>
-    <div class="stat-value">{{ promedio_sueldo_bruto }}</div>
+<div class="container py-5">
+  <h2 class="text-white text-center mb-5">Dashboard de Trabajadores</h2>
+  <div class="row g-4">
+      <div class="col-md-3">
+          <div class="card text-white bg-primary shadow h-100">
+              <div class="card-body text-center">
+                  <h5 class="card-title">Total Trabajadores</h5>
+                  <h3>{{ total }}</h3>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-3">
+          <div class="card text-white bg-success shadow h-100">
+              <div class="card-body text-center">
+                  <h5 class="card-title">Activos</h5>
+                  <h3>{{ activos }}</h3>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-3">
+          <div class="card text-white bg-danger shadow h-100">
+              <div class="card-body text-center">
+                  <h5 class="card-title">Inactivos</h5>
+                  <h3>{{ inactivos }}</h3>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-3">
+          <div class="card text-white bg-warning shadow h-100">
+              <div class="card-body text-center">
+                  <h5 class="card-title">Prom. Sueldo Bruto</h5>
+                  <h3>${{ promedio|floatformat:2 }}</h3>
+              </div>
+          </div>
+      </div>
   </div>
 </div>
 {% endblock %}

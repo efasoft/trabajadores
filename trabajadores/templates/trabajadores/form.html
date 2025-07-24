@@ -14,33 +14,137 @@
   .btn-secondary { background:#6c757d; }
   .btn-primary:hover, .btn-secondary:hover { opacity:0.9; }
 </style>
+<div class="container py-5">
+  <div class="row justify-content-center">
+      <div class="col-md-10">
+          <div class="card shadow-lg">
+              <div class="card-header bg-gradient text-white text-center">
+                  <h3>{{ accion }} Trabajador</h3>
+              </div>
+              <div class="card-body">
+                  <form method="POST" enctype="multipart/form-data">
+                      {% csrf_token %}
 
-<div class="card">
-  <h3 style="text-align:center; margin-bottom:1.5rem;">{{ titulo }} Trabajador</h3>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% for field in form.visible_fields %}
-      <div class="form-group{% if field.name in ['password'] %} password-wrapper{% endif %}{% if field.name == 'foto' %} file-wrapper{% endif %}">
-        <label class="form-label">{{ field.label }}{% if field.field.required %}*{% endif %}</label>
-        {{ field }}
-        {% if field.errors %}<div style="color:red;font-size:.9rem;">{{ field.errors|first }}</div>{% endif %}
-        {% if field.name == 'password' %}
-          <span class="toggle-password" onclick="togglePassword()">👁 Mostrar</span>
-        {% endif %}
-        {% if field.name == 'foto' and form.instance.pk and form.instance.foto %}
-          <p>Archivo actual: {{ form.instance.foto.name }}</p>
-        {% endif %}
+                      <!-- Nombres -->
+                      <div class="mb-3">
+                          <label for="id_nombres" class="form-label">Nombres</label>
+                          {{ form.nombres }}
+                          {% if 'nombres' in form.errors %}
+                              <div class="text-danger">{{ form.errors.nombres.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Apellidos -->
+                      <div class="mb-3">
+                          <label for="id_apellidos" class="form-label">Apellidos</label>
+                          {{ form.apellidos }}
+                          {% if 'apellidos' in form.errors %}
+                              <div class="text-danger">{{ form.errors.apellidos.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Email -->
+                      <div class="mb-3">
+                          <label for="id_email" class="form-label">Correo Electrónico</label>
+                          {{ form.email }}
+                          {% if 'email' in form.errors %}
+                              <div class="text-danger">{{ form.errors.email.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Fecha -->
+                      <div class="mb-3">
+                          <label for="id_fecha" class="form-label">Fecha de ingreso</label>
+                          {{ form.fecha }}
+                          {% if 'fecha' in form.errors %}
+                              <div class="text-danger">{{ form.errors.fecha.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Edad -->
+                      <div class="mb-3">
+                          <label for="id_edad" class="form-label">Edad</label>
+                          {{ form.edad }}
+                          {% if 'edad' in form.errors %}
+                              <div class="text-danger">{{ form.errors.edad.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Teléfono Casa -->
+                      <div class="mb-3">
+                          <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
+                          {{ form.telefono_casa }}
+                          {% if 'telefono_casa' in form.errors %}
+                              <div class="text-danger">{{ form.errors.telefono_casa.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Teléfono Móvil -->
+                      <div class="mb-3">
+                          <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
+                          {{ form.telefono_movil }}
+                          {% if 'telefono_movil' in form.errors %}
+                              <div class="text-danger">{{ form.errors.telefono_movil.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Sueldo Base -->
+                      <div class="mb-3">
+                          <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
+                          {{ form.sueldo_base }}
+                          {% if 'sueldo_base' in form.errors %}
+                              <div class="text-danger">{{ form.errors.sueldo_base.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Comisión -->
+                      <div class="mb-3">
+                          <label for="id_comision" class="form-label">Comisión (%)</label>
+                          {{ form.comision }}
+                          {% if 'comision' in form.errors %}
+                              <div class="text-danger">{{ form.errors.comision.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Foto -->
+                      <div class="mb-3">
+                          <label for="id_foto" class="form-label">Foto</label>
+                          {{ form.foto }}
+                          {% if 'foto' in form.errors %}
+                              <div class="text-danger">{{ form.errors.foto.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Activo -->
+                      <div class="mb-3 form-check">
+                          {{ form.activo }}
+                          <label for="id_activo" class="form-check-label">¿Activo?</label>
+                          {% if 'activo' in form.errors %}
+                              <div class="text-danger">{{ form.errors.activo.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <!-- Contraseña -->
+                      <div class="mb-3">
+                          <label for="id_password" class="form-label">Contraseña</label>
+                          <div class="input-group">
+                              {{ form.password }}
+                              <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">👁</button>
+                          </div>
+                          {% if 'password' in form.errors %}
+                              <div class="text-danger">{{ form.errors.password.0 }}</div>
+                          {% endif %}
+                      </div>
+
+                      <div class="text-center">
+                          <button type="submit" class="btn btn-success px-4">{{ accion }}</button>
+                          <a href="{% url 'trabajadores:listar' %}" class="btn btn-secondary ms-2">Cancelar</a>
+                      </div>
+                  </form>
+              </div>
+          </div>
       </div>
-    {% endfor %}
-    <div class="form-group">
-      <label class="form-label">Sueldo Bruto</label>
-      <input class="form-control" value="{{ form.instance.sueldo_bruto }}" readonly>
-    </div>
-    <div class="btn-group">
-      <button type="submit" class="btn-primary">Guardar</button>
-      <a href="{% url 'trabajadores:listar' %}" class="btn-secondary">Cancelar</a>
-    </div>
-  </form>
+  </div>
 </div>
 
 <script>
