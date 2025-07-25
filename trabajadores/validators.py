@@ -22,6 +22,13 @@ class TrabajadorModel(BaseModel):
             raise ValueError('Máximo 60 caracteres')
         return v
 
+    @field_validator('nombres', 'apellidos')
+    def nombre_vacio_length(cls, v):
+        if not v:
+            raise ValueError('Este campo no puede quedar vacio')
+        return v
+
+
     @field_validator('edad')
     def edad_valida(cls, v):
         if not (18 <= v <= 100):
@@ -30,14 +37,14 @@ class TrabajadorModel(BaseModel):
 
     @field_validator('telefono_casa')
     def validar_telefono_casa(cls, v):
-        if not re.match(r'^\\d{9}$', v):
-            raise ValueError('Teléfono casa inválido')
+        if not re.match(r'^9[0-9]{8}$', v):
+            raise ValueError("Teléfono fijo inválido (Ej: 912345678)")
         return v
 
     @field_validator('telefono_movil')
     def validar_telefono_movil(cls, v):
-        if not re.match(r'^6\\d{8}$', v):
-            raise ValueError('Teléfono móvil inválido')
+        if not re.match(r'^6[0-9]{8}$', v):
+            raise ValueError("Teléfono movil inválido (Ej: 612345678)")
         return v
 
     @field_validator('sueldo_base', 'comision')
