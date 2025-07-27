@@ -1,4 +1,15 @@
 {% extends 'base.html' %}
+<!-- Incluye Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    flatpickr(".datepicker", {
+        dateFormat: "d-m-Y",
+        allowInput: true,
+        locale: "es"
+    });
+</script>
 
 {% block content %}
 <div class="container py-5">
@@ -29,9 +40,12 @@
                 <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control" required>
               </div>
 
-              <div class="col-md-6">
-                <label for="id_fecha" class="form-label">Fecha de ingreso</label>
-                <input type="date" name="fecha" id="id_fecha" value="{{ form.fecha.value|default_if_none:'' }}" class="form-control" required>
+              <div class="col-md-6 mb-3">
+                <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
+                <input type="text" id="id_fecha" name="fecha"
+                       class="form-control datepicker"
+                       placeholder="DD/MM/AAAA"
+                       value="{{ form.fecha.value|default_if_none:'' }}">
               </div>
 
               <div class="col-md-6">
@@ -58,6 +72,15 @@
                 <label for="id_comision" class="form-label">Comisión (%)</label>
                 <input type="number" step="0.01" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control">
               </div>
+
+              <div class="row">
+                <!-- Campo sueldo_bruto (solo lectura) -->
+                <div class="col-md-6 mb-3">
+                  <label for="id_sueldo_bruto" class="form-label">Sueldo Bruto</label>
+                  <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" 
+                         class="form-control bg-light" value="{{ form.instance.sueldo_bruto }}" readonly>
+                </div>
+              </div>              
 
               <div class="col-md-6">
                 <label for="id_foto" class="form-label">Foto</label>
@@ -102,6 +125,23 @@
 <!-- SWEETALERT2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<!-- Flatpickr (Datepicker elegante) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+  flatpickr(".datepicker", {
+    dateFormat: "d/m/Y",
+    locale: "es",
+    allowInput: true,
+    defaultDate: "{{ form.fecha.value|default_if_none:'' }}"
+  });
+</script>
+
+
+
+
 <script>
 function togglePassword() {
   const pwd = document.getElementById("id_password");
@@ -133,6 +173,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
+
+
+<script>
+document.querySelector("form").addEventListener("submit", function (e) {
+    const fecha = document.querySelector(".datepicker").value;
+    const regexFecha = /^\d{2}/\d{2}/\d{4}$/;
+
+    if (!regexFecha.test(fecha)) {
+        e.preventDefault();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de validación',
+            text: 'Formato de fecha inválido. Usa DD/MM/AAAA'
+        });
+    }
+});
+</script>
+
+<script>
+  const baseInput = document.getElementById("id_sueldo_base");
+  const comisionInput = document.getElementById("id_comision");
+  const brutoInput = document.getElementById("id_sueldo_bruto");
+
+  function calcularBruto() {
+    const base = parseFloat(baseInput.value) || 0;
+    const comision = parseFloat(comisionInput.value) || 0;
+    brutoInput.value = (base + comision).toFixed(2);
+  }
+
+  baseInput.addEventListener('input', calcularBruto);
+  comisionInput.addEventListener('input', calcularBruto);
+</script>
+
+
 
 <style>
 .card {

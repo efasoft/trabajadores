@@ -26,7 +26,8 @@
     </thead>
     <tbody>
       {% for t in trabajadores %}
-      <tr>
+
+      <tr class="medicamento-card">
         <td>{{ t.nombres }} {{ t.apellidos }}</td>
         <td>{{ t.email }}</td>
         <td>{{ t.activo }}</td>
@@ -36,6 +37,7 @@
           <button onclick="confirmDel({{ t.id }})" class="btn-sm btn-danger"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
+
       {% empty %}
       <tr><td colspan="5" style="text-align:center;">No hay trabajadores</td></tr>
       {% endfor %}
