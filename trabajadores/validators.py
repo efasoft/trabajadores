@@ -39,6 +39,17 @@ class TrabajadorModel(BaseModel):
             raise ValueError('Edad debe estar entre 18 y 100')
         return v
 
+    # --- Fecha ---
+    @field_validator('fecha')
+    def validar_fecha(cls, v):
+        if not isinstance(v, date):
+           raise ValueError("Fecha inválida. Usa el formato DD/MM/AAAA")
+        if v > date.today():
+           raise ValueError("La fecha no puede ser futura")
+        if not v:
+            raise ValueError('Debe ingresar una fecha')       
+        return v       
+
     # --- Teléfonos ---
     @field_validator('telefono_casa')
     def validar_telefono_casa(cls, v):
