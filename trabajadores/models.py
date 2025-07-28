@@ -16,7 +16,7 @@ class Trabajador(models.Model):
 
     @property
     def sueldo_bruto(self):
-        return self.sueldo_base + self.comision
+        return (self.sueldo_base or 0) + (self.comision or 0)
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"

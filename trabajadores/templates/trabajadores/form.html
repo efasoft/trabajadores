@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
 
-<!-- Flatpickr -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 {% block content %}
 <div class="container py-5">
@@ -85,7 +82,16 @@
               <!-- Foto -->
               <div class="col-md-6">
                 <label for="id_foto" class="form-label">Foto</label>
-                <input type="file" name="foto" id="id_foto" class="form-control">
+                <input type="file" name="foto" id="id_foto" class="form-control mb-2" accept="image/*" onchange="vistaPreviaFoto(event)">
+
+                <div class="mt-2">
+                  {% if trabajador.foto %}
+                    <label class="form-label d-block">Imagen actual:</label>
+                    <img id="preview_foto" src="{{ trabajador.foto.url }}" alt="Foto actual" class="img-thumbnail" style="max-height: 120px;">
+                  {% else %}
+                    <img id="preview_foto" src="#" alt="Vista previa" class="img-thumbnail d-none" style="max-height: 120px;">
+                  {% endif %}
+                </div>
               </div>
 
               <!-- Activo -->
@@ -130,16 +136,38 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Flatpickr (Elegante Datepicker) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  flatpickr(".datepicker", {
-    dateFormat: "d/m/Y",
-    locale: "es",
-    allowInput: true,
-    defaultDate: "{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}"
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof flatpickr !== 'undefined') {
+      flatpickr(".datepicker", {
+        dateFormat: "d/m/Y",
+        locale: "es",
+        allowInput: true
+      });
+    } else {
+      console.error("Flatpickr no está disponible.");
+    }
   });
-});
+</script>
+
+<script>
+  function vistaPreviaFoto(event) {
+    const input = event.target;
+    const preview = document.getElementById('preview_foto');
+  
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+  
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.classList.remove('d-none');
+      }
+  
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
 </script>
 
 <script>
