@@ -1,48 +1,129 @@
 {% extends 'base.html' %}
 {% block title %}Lista de Trabajadores{% endblock %}
+
 {% block content %}
 <style>
-  body 
-  .card { background:white; padding:1.5rem; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,0.2); margin:auto; margin-top:3vh; max-width:90%; }
-  .btn-primary { background:#007bff; color:white; padding:.5rem .8rem; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
-  .btn-primary:hover { opacity:0.9; }
-  .table { width:100%; border-collapse:collapse; }
-  .table th, .table td { padding:.75rem; border:1px solid #dee2e6; }
-  .table th { background:#f8f9fa; }
-  .btn-sm { padding:.3rem .5rem; border:none; border-radius:4px; cursor:pointer; }
-  .btn-info { background:#17a2b8; color:white; }
-  .btn-danger { background:#dc3545; color:white; }
-  .btn-info:hover, .btn-danger:hover { opacity:0.9; }
+  .page-title {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-icon {
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    color: white;
+    border: none;
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 1.2rem;
+    transition: 0.3s;
+  }
+
+  .btn-icon:hover {
+    background: #005ecb;
+    transform: scale(1.05);
+  }
+
+  .search-box {
+    max-width: 300px;
+    margin-bottom: 1rem;
+  }
+
+  .card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .card-trabajador {
+    background: white;
+    border-left: 5px solid #28a745;
+    padding: 1rem 1.5rem;
+    border-radius: 0.8rem;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+  }
+
+  .card-trabajador:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-trabajador .row {
+    align-items: center;
+  }
+
+  .acciones i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .acciones i.fa-edit { color: #17a2b8; }
+  .acciones i.fa-trash { color: #dc3545; }
+  .acciones i:hover { transform: scale(1.2); }
+
+  .pagination {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .pagination button {
+    background-color: #0072ff;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .pagination button:hover {
+    background-color: #005ecb;
+  }
+
+  .pagination .active {
+    background-color: #00b894;
+  }
+
 </style>
 
 <div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h3>Trabajadores</h3>
-    <a href="{% url 'trabajadores:crear' %}" class="btn-primary"><i class="fas fa-plus"></i> Agregar</a>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="page-title">Trabajadores</h3>
+    <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
+      <i class="fas fa-user-plus"></i>
+    </a>
   </div>
-  <table class="table table-striped">
-    <thead>
-      <tr><th>Nombre</th><th>Email</th><th>Activo</th><th>Sueldo Bruto</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-      {% for t in trabajadores %}
 
-      <tr>
-        <td>{{ t.nombres }} {{ t.apellidos }}</td>
-        <td>{{ t.email }}</td>
-        <td>{{ t.activo }}</td>
-        <td>{{ t.sueldo_bruto }}</td>
-        <td>
-          <a href="{% url 'trabajadores:editar' t.id %}" class="btn-sm btn-info"><i class="fas fa-edit"></i></a>
-          <button onclick="confirmDel({{ t.id }})" class="btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>
+  <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
-      {% empty %}
-      <tr><td colspan="5" style="text-align:center;">No hay trabajadores</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div id="trabajadoresContainer" class="card-row">
+    {% for t in trabajadores %}
+    <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
+      <div class="row">
+        <div class="col-md"><strong>Nombre:</strong> {{ t.nombres }} {{ t.apellidos }}</div>
+        <div class="col-md"><strong>Email:</strong> {{ t.email }}</div>
+        <div class="col-md"><strong>Activo:</strong> {{ t.activo|yesno:"Sí,No" }}</div>
+        <div class="col-md"><strong>Sueldo Bruto:</strong> €{{ t.sueldo_bruto }}</div>
+        <div class="col-md acciones text-end">
+          <a href="{% url 'trabajadores:editar' t.id %}" title="Editar">
+            <i class="fas fa-edit" data-bs-toggle="tooltip"></i>
+          </a>
+          <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" title="Eliminar" data-bs-toggle="tooltip"></i>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="paginacion"></div>
 </div>
 
 <script>
@@ -56,8 +137,66 @@ function confirmDel(id) {
     cancelButtonText:'Cancelar'
   }).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
 }
+
+// Init Tooltips
+document.addEventListener("DOMContentLoaded", function () {
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+});
+
+// Búsqueda en vivo + paginación
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  const container = document.getElementById("trabajadoresContainer");
+  const paginacion = document.getElementById("paginacion");
+  const elementos = Array.from(container.children);
+  const porPagina = 5;
+  let paginaActual = 1;
+
+  function filtrar() {
+    const query = searchInput.value.toLowerCase();
+    return elementos.filter(el =>
+      el.dataset.nombre.includes(query) || el.dataset.email.includes(query)
+    );
+  }
+
+  function renderPagina(items, pagina) {
+    container.innerHTML = "";
+    const start = (pagina - 1) * porPagina;
+    const end = start + porPagina;
+    const paginaItems = items.slice(start, end);
+    paginaItems.forEach(el => container.appendChild(el));
+  }
+
+  function renderPaginacion(items) {
+    paginacion.innerHTML = "";
+    const total = Math.ceil(items.length / porPagina);
+    for (let i = 1; i <= total; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      if (i === paginaActual) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        paginaActual = i;
+        renderPagina(items, paginaActual);
+        renderPaginacion(items);
+      });
+      paginacion.appendChild(btn);
+    }
+  }
+
+  function actualizarVista() {
+    const filtrados = filtrar();
+    paginaActual = 1;
+    renderPagina(filtrados, paginaActual);
+    renderPaginacion(filtrados);
+  }
+
+  searchInput.addEventListener("input", actualizarVista);
+  actualizarVista();
+});
 </script>
 {% endblock %}
+
 
 
 
