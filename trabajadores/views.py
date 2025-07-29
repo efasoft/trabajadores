@@ -8,6 +8,10 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 
+import csv
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 @login_required
 def home(request):
@@ -133,6 +137,46 @@ def eliminar_trabajador(request, trabajador_id):
     except Trabajador.DoesNotExist:
         messages.error(request, "El trabajador no existe.")
     return HttpResponseRedirect(reverse('trabajadores:listar'))
+
+@login_required
+def exportar_excel(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="trabajadores.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Nombre', 'Email', 'Activo', 'Sueldo Bruto'])
+
+    for t in Trabajador.objects.all():
+        writer.writerow([f"{t.nombres} {t.apellidos}", t.email, t.activo, t.sueldo_bruto])
+
+    return response
+
+@login_required
+def exportar_pdf(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="trabajadores.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+    y = height - 40
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(30, y, "Lista de Trabajadores")
+    y -= 30
+
+    p.setFont("Helvetica", 11)
+    for t in Trabajador.objects.all():
+        p.drawString(30, y, f"{t.nombres} {t.apellidos} | {t.email} | Activo: {'Sí' if t.activo else 'No'} | €{t.sueldo_bruto}")
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = height - 40
+
+    p.showPage()
+    p.save()
+    return response
+
+
 
 """
 @login_required

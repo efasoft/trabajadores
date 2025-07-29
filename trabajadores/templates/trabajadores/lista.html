@@ -94,12 +94,23 @@
 </style>
 
 <div class="card">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="page-title">Trabajadores</h3>
-    <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
-      <i class="fas fa-user-plus"></i>
-    </a>
-  </div>
+  
+    <div class="d-flex gap-2">
+      <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
+        <i class="fas fa-user-plus"></i>
+      </a>
+      <a href="{% url 'trabajadores:exportar_excel' %}" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a Excel">
+        <i class="fas fa-file-excel"></i>
+      </a>
+      <a href="{% url 'trabajadores:exportar_pdf' %}" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a PDF">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+    </div>
+  </div>  
+
 
   <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
