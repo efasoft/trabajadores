@@ -61,3 +61,48 @@ input[type="file"] {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+.card-superior {
+  width: 300px;
+  height: 200px;
+  border: 2px solid transparent; /* Inicialmente sin borde visible */
+  position: relative;
+  overflow: hidden; /* Para ocultar cualquier desbordamiento de la animación */
+}
+
+.card-superior::before { /* Borde animado con color */
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, red, yellow, green, blue);
+  background-size: 400% 400%;
+  animation: gradient 10s ease infinite;
+  z-index: -1; /* Asegura que el borde esté detrás del contenido */
+  border-radius: 5px; /* Coincide con el borde del .card-content */
+}
+
+
+.card-border {
+  position: relative;
+  z-index: 1; /* Asegura que el contenido esté sobre el borde */
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  height: 100%;
+  box-sizing: border-box; /* Para que el padding no afecte el tamaño */
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
