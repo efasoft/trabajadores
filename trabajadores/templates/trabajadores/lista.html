@@ -102,15 +102,14 @@
       <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
         <i class="fas fa-user-plus"></i>
       </a>
-      <a href="{% url 'trabajadores:exportar_excel' %}" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a Excel">
+      <a id="confirmExportExcel" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a Excel">
         <i class="fas fa-file-excel"></i>
       </a>
-      <a href="{% url 'trabajadores:exportar_pdf' %}" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a PDF">
+      <a id="btnExportPDF" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a PDF">
         <i class="fas fa-file-pdf"></i>
       </a>
     </div>
   </div>  
-
 
   <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
@@ -206,6 +205,111 @@ document.addEventListener("DOMContentLoaded", () => {
   actualizarVista();
 });
 </script>
+
+<script>
+  function confirmarVerPdf() {
+    Swal.fire({
+      title: '¿Desea ver reporte_trabajadores.pdf?',
+      text: "Puedes visualizarlo o descargarlo ahora.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ver',
+      cancelButtonText: 'Descargar',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Abrir en nueva pestaña
+        window.open('/exportar/pdf/?q=' + getBusquedaActual(), '_blank');
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        // Forzar descarga
+        const a = document.createElement('a');
+        a.href = '/exportar/pdf/?q=' + getBusquedaActual() + '&descargar=1';
+        a.download = 'reporte_trabajadores.pdf';
+        a.click();
+      }
+    });
+  }
+  
+  function confirmarPDF() {
+  Swal.fire({
+    title: '¿Desea ver el reporte?',
+    text: "Puede verlo en el navegador o descargarlo.",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ver',
+    cancelButtonText: 'Descargar',
+    reverseButtons: true
+  }).then((result) => {
+      if (result.isConfirmed) {
+        // Abrir en nueva pestaña
+        window.open('/exportar/pdf/?q=' + getBusquedaActual(), '_blank');
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        // Forzar descarga
+        const a = document.createElement('a');
+        a.href = '/exportar/pdf/?q=' + getBusquedaActual() + '&descargar=1';
+        a.download = 'reporte_trabajadores.pdf';
+        a.click();
+      }
+    });
+  }
+
+  function getBusquedaActual() {
+    const input = document.getElementById('searchInput');
+    return input ? encodeURIComponent(input.value.trim()) : '';
+  }
+
+  </script>
+
+<script>
+  document.getElementById("btnExportPDF").addEventListener("click", function () {
+    const filtro = document.getElementById("searchInput").value;
+    Swal.fire({
+      title: '¿Desea ver reporte_trabajadores.pdf?',
+      showCancelButton: true,
+      confirmButtonText: 'Ver ahora',
+      cancelButtonText: 'Descargar',
+      icon: 'question'
+    }).then((result) => {
+      const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
+      window.open(url, '_blank');
+    });
+  });
+  </script>
+
+<script>
+  document.getElementById("confirmExportExcel").addEventListener("click", function () {  
+    const filtro = document.getElementById("searchInput").value;
+    Swal.fire({
+      title: "¿Desea ver el archivo Excel?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, mostrar",
+      cancelButtonText: "No, descargar",
+    }).then((result) => {
+      const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
+      window.open(url, '_blank');
+    });
+  });
+  </script>
+
+<script>
+  document.getElementById("btnExportExcel").addEventListener("click", function () {
+    const filtro = document.getElementById("searchInput").value;
+    Swal.fire({
+      title: '¿Desea ver reporte_trabajadores.csv?',
+      showCancelButton: true,
+      confirmButtonText: 'Ver ahora',
+      cancelButtonText: 'Descargar',
+      icon: 'question'
+    }).then((result) => {
+      const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
+      window.open(url, '_blank');
+    });
+  });
+  </script>
+
+
+
 {% endblock %}
 
 

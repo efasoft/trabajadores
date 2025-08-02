@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
+from django.conf import settings  # <-- ESTA ES LA CLAVE
 from django.contrib.auth.decorators import login_required
 from .models import Trabajador
 from .forms import TrabajadorForm
@@ -9,9 +11,21 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 
 import csv
-from django.http import HttpResponse
+
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+import os
+import io
+from django.http import FileResponse
+from django.contrib.auth.decorators import login_required
+
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 
 @login_required
 def home(request):
@@ -140,42 +154,198 @@ def eliminar_trabajador(request, trabajador_id):
 
 @login_required
 def exportar_excel(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="trabajadores.csv"'
+    filtro = request.GET.get('q', '').lower()
 
-    writer = csv.writer(response)
-    writer.writerow(['Nombre', 'Email', 'Activo', 'Sueldo Bruto'])
+    trabajadores = Trabajador.objects.all()
+    if filtro:
+        trabajadores = trabajadores.filter(
+            nombres__icontains=filtro
+        ) | trabajadores.filter(
+            apellidos__icontains=filtro
+        ) | trabajadores.filter(
+            email__icontains=filtro
+        )
 
-    for t in Trabajador.objects.all():
-        writer.writerow([f"{t.nombres} {t.apellidos}", t.email, t.activo, t.sueldo_bruto])
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Trabajadores"
 
+    # Estilo encabezado
+    encabezados = [
+        "NOMBRES", "APELLIDOS", "EMAIL", "ACTIVO", "SUELDO BRUTO",
+        "FECHA", "EDAD", "TEL. CASA", "TEL. MÓVIL"
+    ]
+
+    bold_font = Font(bold=True, color="FFFFFF")
+    fill = PatternFill(start_color="003C3C", end_color="003C3C", fill_type="solid")
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    right_align = Alignment(horizontal="right", vertical="center")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin'),
+    )
+
+    for col_num, header in enumerate(encabezados, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = bold_font
+        cell.fill = fill
+        cell.alignment = center_align
+        cell.border = border
+
+    # Datos
+    for row_num, t in enumerate(trabajadores, 2):
+        row = [
+            t.nombres,
+            t.apellidos,
+            t.email,
+            "Sí" if t.activo else "No",
+            f"{t.sueldo_bruto:,.2f}",
+            t.fecha.strftime("%d/%m/%Y") if t.fecha else "",
+            t.edad,
+            t.telefono_casa,
+            t.telefono_movil
+        ]
+        for col_num, valor in enumerate(row, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=valor)
+            if col_num in [1, 2, 3]:
+                cell.alignment = left_align
+            elif col_num in [4, 6, 7, 8, 9]:
+                cell.alignment = center_align
+            elif col_num == 5:
+                cell.alignment = right_align
+            cell.border = border
+
+    # Total al final
+    total_row = len(trabajadores) + 2
+    ws.merge_cells(start_row=total_row, start_column=1, end_row=total_row, end_column=8)
+    cell_total = ws.cell(row=total_row, column=1, value="TOTAL TRABAJADORES")
+    cell_total.font = Font(bold=True)
+    cell_total.alignment = right_align
+
+    count_cell = ws.cell(row=total_row, column=9, value=trabajadores.count())
+    count_cell.font = Font(bold=True)
+    count_cell.alignment = center_align
+
+    # Ajustar ancho de columnas
+    for i, col in enumerate(encabezados, 1):
+        ws.column_dimensions[get_column_letter(i)].width = 18
+
+    # Respuesta HTTP
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    disposition = 'inline' if request.GET.get('descargar') == '0' else 'attachment'
+    response['Content-Disposition'] = f'{disposition}; filename="reporte_trabajadores.xlsx"'
+    wb.save(response)
     return response
 
 @login_required
 def exportar_pdf(request):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="trabajadores.pdf"'
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+    )
 
-    p = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
-    y = height - 40
+    elementos = []
 
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(30, y, "Lista de Trabajadores")
-    y -= 30
+    # Logo
+    logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'img', 'efa_soft.jpg')
+    try:
+        img = Image(logo_path, width=3 * cm, height=3 * cm)
+    except:
+        img = Paragraph("", getSampleStyleSheet()['Normal'])
 
-    p.setFont("Helvetica", 11)
-    for t in Trabajador.objects.all():
-        p.drawString(30, y, f"{t.nombres} {t.apellidos} | {t.email} | Activo: {'Sí' if t.activo else 'No'} | €{t.sueldo_bruto}")
-        y -= 20
-        if y < 50:
-            p.showPage()
-            y = height - 40
+    # Título y fecha
+    estilos = getSampleStyleSheet()
+    titulo = Paragraph("<b style='font-size:18pt;color:#003c3c;'>REPORTE GENERAL DE TRABAJADORES</b>", estilos['Title'])
+    fecha = Paragraph(f"<para align='right'>Emitido: {datetime.now().strftime('%d/%m/%Y')}</para>", estilos['Normal'])
 
-    p.showPage()
-    p.save()
+    header = Table([[img, titulo, fecha]], colWidths=[4*cm, 16*cm, 8*cm])
+    header.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+    ]))
+    elementos.append(header)
+    elementos.append(Spacer(1, 12))
+
+    # Encabezado
+    encabezado = [
+        "NOMBRES", "APELLIDOS", "EMAIL", "ACTIVO", "SUELDO BRUTO",
+        "FECHA", "EDAD", "TEL. CASA", "TEL. MÓVIL"
+    ]
+
+    data = [encabezado]
+    # Aplicar filtro si viene desde búsqueda
+    filtro = request.GET.get('q', '').lower()
+    trabajadores = Trabajador.objects.all()
+    if filtro:
+        trabajadores = trabajadores.filter(
+            nombres__icontains=filtro
+        ) | trabajadores.filter(
+            apellidos__icontains=filtro
+        ) | trabajadores.filter(
+            email__icontains=filtro
+        )
+
+    for t in trabajadores:
+        data.append([
+            t.nombres,
+            t.apellidos,
+            t.email,
+            "Sí" if t.activo else "No",
+            f"€{t.sueldo_bruto:,.2f}",
+            t.fecha.strftime("%d/%m/%Y") if t.fecha else "",
+            str(t.edad),
+            t.telefono_casa,
+            t.telefono_movil,
+        ])
+
+    # Total trabajadores
+    total_row = ["", "", "", "", "", "", "", "", f"Total: {trabajadores.count()}"]
+    data.append(total_row)
+
+    col_just = ['LEFT', 'LEFT', 'LEFT', 'CENTER', 'RIGHT', 'CENTER', 'CENTER', 'CENTER', 'CENTER']
+    tabla = Table(data, repeatRows=1, colWidths=[4.5*cm, 4.5*cm, 6*cm, 2*cm, 3*cm, 2*cm, 1.3*cm, 2.2*cm, 2.2*cm])
+
+    estilo = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#003c3c")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('ROWBACKGROUNDS', (1, 1), (-1, -2), [colors.whitesmoke, colors.lightgrey]),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ])
+
+    # Alineación individual por columna
+    for idx, align in enumerate(col_just):
+        estilo.add('ALIGN', (idx, 1), (idx, -2), align)
+
+    # Totales en negrita y alineados a la derecha
+    estilo.add('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold')
+    estilo.add('ALIGN', (-1, -1), (-1, -1), 'RIGHT')
+
+    tabla.setStyle(estilo)
+    elementos.append(tabla)
+
+    doc.build(elementos)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type='application/pdf')
+    if request.GET.get('descargar') == '1':
+        response['Content-Disposition'] = 'attachment; filename="reporte_trabajadores.pdf"'
+    else:
+        response['Content-Disposition'] = 'inline; filename="reporte_trabajadores.pdf"'
+
     return response
-
 
 
 """
