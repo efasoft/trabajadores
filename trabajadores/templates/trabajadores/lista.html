@@ -41,30 +41,59 @@
     background: white;
     border-left: 5px solid #28a745;
     padding: 1rem 1.5rem;
-    border-radius: 0.8rem;
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 0.5rem;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    position: relative;
+
   }
 
   .card-trabajador:hover {
     transform: scale(1.01);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
   }
 
-  .card-trabajador .row {
-    align-items: center;
+  .card-trabajador .row > div {
+    padding: 0.3rem 0.6rem;
+  }
+
+  .col-nombre { width: 40%; }
+  .col-email { width: 30%; }
+  .col-activo { width: 10%; }
+  .col-sueldo { width: 20%; }
+
+  .acciones {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(6px);
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.6rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-trabajador:hover .acciones {
+    opacity: 1;
   }
 
   .acciones i {
-    font-size: 1.2rem;
-    margin-right: 10px;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: 0.3s;
+    transition: transform 0.05s ease;
   }
 
-  .acciones i.fa-edit { color: #17a2b8; }
-  .acciones i.fa-trash { color: #dc3545; }
-  .acciones i:hover { transform: scale(1.2); }
+  .acciones i:hover {
+    transform: scale(0.9);
+  }
+
+  .fa-edit { color: #17a2b8; }
+  .fa-trash { color: #dc3545; }
 
   .pagination {
     margin-top: 2rem;
@@ -90,14 +119,13 @@
   .pagination .active {
     background-color: #00b894;
   }
-
 </style>
 
 <div class="card">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="page-title">Trabajadores</h3>
-  
+
     <div class="d-flex gap-2">
       <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
         <i class="fas fa-user-plus"></i>
@@ -109,30 +137,27 @@
         <i class="fas fa-file-pdf"></i>
       </a>
     </div>
-  </div>  
+  </div>
 
   <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
   <div id="trabajadoresContainer" class="card-row">
     {% for t in trabajadores %}
-    <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
-      <div class="row">
-        <div class="col-md"><strong>Nombre:</strong> {{ t.nombres }} {{ t.apellidos }}</div>
-        <div class="col-md"><strong>Email:</strong> {{ t.email }}</div>
-        <div class="col-md"><strong>Activo:</strong> {{ t.activo|yesno:"Sí,No" }}</div>
-        <div class="col-md"><strong>Sueldo Bruto:</strong> €{{ t.sueldo_bruto }}</div>
-        <div class="col-md acciones text-end">
-          <a href="{% url 'trabajadores:editar' t.id %}" title="Editar">
-            <i class="fas fa-edit" data-bs-toggle="tooltip"></i>
-          </a>
-          <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" title="Eliminar" data-bs-toggle="tooltip"></i>
+      <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
+        <div class="row">
+          <div class="col-nombre"><strong>Nombre:</strong> {{ t.nombres }} {{ t.apellidos }}</div>
+          <div class="col-email"><strong>Email:</strong> {{ t.email }}</div>
+          <div class="col-activo"><strong>Activo:</strong> {{ t.activo|yesno:"Sí,No" }}</div>
+          <div class="col-sueldo"><strong>Sueldo Bruto:</strong> €{{ t.sueldo_bruto }}</div>
+        </div>
+        <div class="acciones">
+          <a href="{% url 'trabajadores:editar' t.id %}" title="Editar"><i class="fas fa-edit"></i></a>
+          <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" title="Eliminar"></i>
         </div>
       </div>
-    </div>
     {% endfor %}
   </div>
 
-  <!-- Pagination -->
   <div class="pagination" id="paginacion"></div>
 </div>
 
@@ -148,13 +173,11 @@ function confirmDel(id) {
   }).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
 }
 
-// Init Tooltips
 document.addEventListener("DOMContentLoaded", function () {
   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
   tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 });
 
-// Búsqueda en vivo + paginación
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const container = document.getElementById("trabajadoresContainer");
@@ -207,109 +230,34 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <script>
-  function confirmarVerPdf() {
-    Swal.fire({
-      title: '¿Desea ver reporte_trabajadores.pdf?',
-      text: "Puedes visualizarlo o descargarlo ahora.",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Ver',
-      cancelButtonText: 'Descargar',
-      reverseButtons: true
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Abrir en nueva pestaña
-        window.open('/exportar/pdf/?q=' + getBusquedaActual(), '_blank');
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        // Forzar descarga
-        const a = document.createElement('a');
-        a.href = '/exportar/pdf/?q=' + getBusquedaActual() + '&descargar=1';
-        a.download = 'reporte_trabajadores.pdf';
-        a.click();
-      }
-    });
-  }
-  
-  function confirmarPDF() {
+document.getElementById("btnExportPDF").addEventListener("click", function () {
+  const filtro = document.getElementById("searchInput").value;
   Swal.fire({
-    title: '¿Desea ver el reporte?',
-    text: "Puede verlo en el navegador o descargarlo.",
-    icon: 'question',
+    title: '¿Desea ver reporte_trabajadores.pdf?',
     showCancelButton: true,
-    confirmButtonText: 'Ver',
+    confirmButtonText: 'Ver ahora',
     cancelButtonText: 'Descargar',
-    reverseButtons: true
+    icon: 'question'
   }).then((result) => {
-      if (result.isConfirmed) {
-        // Abrir en nueva pestaña
-        window.open('/exportar/pdf/?q=' + getBusquedaActual(), '_blank');
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        // Forzar descarga
-        const a = document.createElement('a');
-        a.href = '/exportar/pdf/?q=' + getBusquedaActual() + '&descargar=1';
-        a.download = 'reporte_trabajadores.pdf';
-        a.click();
-      }
-    });
-  }
-
-  function getBusquedaActual() {
-    const input = document.getElementById('searchInput');
-    return input ? encodeURIComponent(input.value.trim()) : '';
-  }
-
-  </script>
-
-<script>
-  document.getElementById("btnExportPDF").addEventListener("click", function () {
-    const filtro = document.getElementById("searchInput").value;
-    Swal.fire({
-      title: '¿Desea ver reporte_trabajadores.pdf?',
-      showCancelButton: true,
-      confirmButtonText: 'Ver ahora',
-      cancelButtonText: 'Descargar',
-      icon: 'question'
-    }).then((result) => {
-      const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
-      window.open(url, '_blank');
-    });
+    const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
+    window.open(url, '_blank');
   });
-  </script>
+});
 
-<script>
-  document.getElementById("confirmExportExcel").addEventListener("click", function () {  
-    const filtro = document.getElementById("searchInput").value;
-    Swal.fire({
-      title: "¿Desea ver el archivo Excel?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, mostrar",
-      cancelButtonText: "No, descargar",
-    }).then((result) => {
-      const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
-      window.open(url, '_blank');
-    });
+document.getElementById("confirmExportExcel").addEventListener("click", function () {
+  const filtro = document.getElementById("searchInput").value;
+  Swal.fire({
+    title: "¿Desea ver el archivo Excel?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, mostrar",
+    cancelButtonText: "No, descargar",
+  }).then((result) => {
+    const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
+    window.open(url, '_blank');
   });
-  </script>
-
-<script>
-  document.getElementById("btnExportExcel").addEventListener("click", function () {
-    const filtro = document.getElementById("searchInput").value;
-    Swal.fire({
-      title: '¿Desea ver reporte_trabajadores.csv?',
-      showCancelButton: true,
-      confirmButtonText: 'Ver ahora',
-      cancelButtonText: 'Descargar',
-      icon: 'question'
-    }).then((result) => {
-      const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
-      window.open(url, '_blank');
-    });
-  });
-  </script>
-
-
-
+});
+</script>
 {% endblock %}
 
 

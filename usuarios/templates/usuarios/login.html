@@ -6,7 +6,7 @@
 {% block content %}
 <style>
   body {
-    background: url("{% static 'img/efa-login-02.jpg' %}") no-repeat center center fixed;
+    background: url("{% static 'img/efa-login-03.jpg' %}") no-repeat center center fixed;
     background-size: cover;
     font-family: 'Segoe UI', sans-serif;
   }
@@ -22,8 +22,8 @@
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-radius: 12px;
-    padding: 2.5rem 3rem;
+    border-radius: 10px;
+    padding: 2em;
     max-width: 400px;
     width: 100%;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.3);
@@ -84,6 +84,51 @@
   .input-group {
     position: relative;
   }
+
+  .card-border{
+  top: -9%;    
+   margin: 0 auto;
+   padding: 2em;
+   width: 300px;
+   background: linear-gradient(90deg, #000000, #124a49, #0a8494);
+   text-align: center;
+   border-radius: 12px;
+   position: relative;
+ }
+ 
+ @property --angle{
+   syntax: "<angle>";
+   initial-value: 0deg;
+   inherits: false;
+ }
+ 
+ .card-border::after, .card-border::before{
+   content: '';
+   position: absolute;
+   height: 101%;
+   width: 100%;
+   background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+   top: 50%;
+   left: 50%;
+   translate: -50% -50%;
+   z-index: -1;
+   padding: 151px;
+   border-radius: 7px;
+   animation: 3s spin linear infinite;
+ }
+ .card-border::before{
+   filter: blur(0.10rem);
+   opacity: 0.5;
+ }
+ @keyframes spin{
+   from{
+     --angle: 0deg;
+   }
+   to{
+     --angle: 360deg;
+   }
+ }  
+
 </style>
 
 <div class="login-container">
