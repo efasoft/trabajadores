@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block title %}Lista de Trabajadores{% endblock %}
 
 {% block content %}
@@ -7,23 +8,21 @@
     font-family: 'Segoe UI', sans-serif;
     font-size: 2rem;
     font-weight: 700;
-    color: #fff;
+    color: #0A0A0A;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   }
 
-  .btn-icon {
-    background: linear-gradient(to right, #00c6ff, #0072ff);
-    color: white;
+  .icon-btn {
+    background: none;
     border: none;
-    border-radius: 0.6rem;
-    padding: 0.6rem 0.8rem;
-    font-size: 1.2rem;
-    transition: 0.3s;
+    padding: 0.3rem;
+    font-size: 1.4rem;
+    color: #D3D6DE;   
+    transition: transform 0.2s ease, color 0.2s ease;
   }
-
-  .btn-icon:hover {
-    background: #005ecb;
-    transform: scale(1.05);
+  .icon-btn:hover {
+    transform: scale(1.15);
+    color: #00c6ff;
   }
 
   .search-box {
@@ -33,7 +32,7 @@
 
   .header-row, .card-trabajador {
     display: flex;
-    align-items: left;
+    align-items: center;
     padding: 0.8rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.90rem;
@@ -62,31 +61,25 @@
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.25);
   }
 
-  .col-nombre { width: 42%; text-align: left;}
-  .col-email { width: 39%; text-align: left;}
-  .col-activo { width: 6%; text-align: center;}
-  .col-sueldo { width: 10%; text-align: center;}
-
-  .col-nombre-d { width: 42%; text-align: left;}
-  .col-email-d { width: 39%; text-align: left;}
-  .col-activo-d { width: 6%; text-align: center;}
-  .col-sueldo-d { width: 9%; text-align: right; margin-right: 3px;}
-
+  .col-nombre { width: 30%; text-align: left;}
+  .col-email { width: 28%; text-align: left;}
+  .col-fecha { width: 15%; text-align: center;}
+  .col-activo { width: 7%; text-align: center;}
+  .col-sueldo { width: 12%; text-align: right;}
 
   .acciones {
-  
+ 
     display: flex;
     gap: 0.6rem;
     align-items: center;
     margin-left: auto;
   }
 
-  .acciones a, .acciones i {
+  .acciones a, .acciones i {   
     font-size: 1rem;
     cursor: pointer;
     transition: transform 0.2s;
   }
-
   .acciones i:hover {
     transform: scale(1.2);
   }
@@ -100,7 +93,6 @@
     justify-content: center;
     gap: 0.5rem;
   }
-
   .pagination button {
     background-color: #0072ff;
     color: white;
@@ -110,30 +102,27 @@
     cursor: pointer;
     font-weight: 600;
   }
-
   .pagination button:hover {
     background-color: #005ecb;
   }
-
   .pagination .active {
     background-color: #00b894;
   }
-
 </style>
 
 <div class="card">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="page-title">Trabajadores</h3>
+    <h3 class="page-title">Relación de Trabajadores</h3>
 
-    <div class="d-flex gap-2">
-      <a href="{% url 'trabajadores:crear' %}" class="btn-icon" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
+    <div class="d-flex gap-3">
+      <a href="{% url 'trabajadores:crear' %}" class="icon-btn" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
         <i class="fas fa-user-plus"></i>
       </a>
-      <a id="confirmExportExcel" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a Excel">
+      <a id="confirmExportExcel" class="icon-btn" data-bs-toggle="tooltip" title="Exportar a Excel">
         <i class="fas fa-file-excel"></i>
       </a>
-      <a id="btnExportPDF" class="btn-icon" data-bs-toggle="tooltip" title="Exportar a PDF">
+      <a id="btnExportPDF" class="icon-btn" data-bs-toggle="tooltip" title="Exportar a PDF">
         <i class="fas fa-file-pdf"></i>
       </a>
     </div>
@@ -145,19 +134,20 @@
   <div class="header-row">
     <div class="col-nombre">Nombre</div>
     <div class="col-email">Email</div>
+    <div class="col-fecha">Fecha</div>
     <div class="col-activo">Activo</div>
     <div class="col-sueldo">Sueldo Bruto</div>
-  
   </div>
 
   <!-- Lista -->
   <div id="trabajadoresContainer">
     {% for t in trabajadores %}
       <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
-        <div class="col-nombre-d">{{ t.nombres }} {{ t.apellidos }}</div>
-        <div class="col-email-d">{{ t.email }}</div>
-        <div class="col-activo-d">{{ t.activo|yesno:"Sí,No" }}</div>
-        <div class="col-sueldo-d">€{{ t.sueldo_bruto }}</div>
+        <div class="col-nombre">{{ t.nombres }} {{ t.apellidos }}</div>
+        <div class="col-email">{{ t.email }}</div>
+        <div class="col-fecha">{{ t.fecha|date:"d/m/Y" }}</div>
+        <div class="col-activo">{{ t.activo|yesno:"Sí,No" }}</div>
+        <div class="col-sueldo">€{{ t.sueldo_bruto|floatformat:2|intcomma }}</div>
         <div class="acciones">
           <a href="{% url 'trabajadores:editar' t.id %}" data-bs-toggle="tooltip" title="Editar"><i class="fas fa-edit"></i></a>
           <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" data-bs-toggle="tooltip" title="Eliminar"></i>
@@ -267,6 +257,8 @@ document.getElementById("confirmExportExcel").addEventListener("click", function
 });
 </script>
 {% endblock %}
+
+
 
 
 
