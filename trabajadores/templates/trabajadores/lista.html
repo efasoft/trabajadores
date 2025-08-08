@@ -7,8 +7,8 @@
     font-family: 'Segoe UI', sans-serif;
     font-size: 2rem;
     font-weight: 700;
-    color: #333;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   }
 
   .btn-icon {
@@ -31,65 +31,64 @@
     margin-bottom: 1rem;
   }
 
-  .card-row {
+  .header-row, .card-trabajador {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    align-items: left;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.90rem;
+  }
+
+  .header-row {
+    background-color: #fff;
+    border-left: 5px solid #8A8A8A; 
+    font-weight: bold;
+    box-shadow: 0 5px 5px rgba(0,0,0,0.25);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
   }
 
   .card-trabajador {
     background: white;
     border-left: 5px solid #28a745;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     position: relative;
-
+    margin-bottom: 0.7rem;
   }
 
   .card-trabajador:hover {
     transform: scale(1.01);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.25);
   }
 
-  .card-trabajador .row > div {
-    padding: 0.3rem 0.6rem;
-  }
+  .col-nombre { width: 42%; text-align: left;}
+  .col-email { width: 39%; text-align: left;}
+  .col-activo { width: 6%; text-align: center;}
+  .col-sueldo { width: 10%; text-align: center;}
 
-  .col-nombre { width: 40%; }
-  .col-email { width: 30%; }
-  .col-activo { width: 10%; }
-  .col-sueldo { width: 20%; }
+  .col-nombre-d { width: 42%; text-align: left;}
+  .col-email-d { width: 39%; text-align: left;}
+  .col-activo-d { width: 6%; text-align: center;}
+  .col-sueldo-d { width: 9%; text-align: right; margin-right: 3px;}
+
 
   .acciones {
-    position: absolute;
-    top: 0.8rem;
-    right: 0.8rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(6px);
-    padding: 0.4rem 0.6rem;
-    border-radius: 0.6rem;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  
     display: flex;
-    gap: 0.5rem;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    gap: 0.6rem;
+    align-items: center;
+    margin-left: auto;
   }
 
-  .card-trabajador:hover .acciones {
-    opacity: 1;
-  }
-
-  .acciones i {
-    font-size: 0.9rem;
+  .acciones a, .acciones i {
+    font-size: 1rem;
     cursor: pointer;
-    transition: transform 0.05s ease;
+    transition: transform 0.2s;
   }
 
   .acciones i:hover {
-    transform: scale(0.9);
+    transform: scale(1.2);
   }
 
   .fa-edit { color: #17a2b8; }
@@ -119,6 +118,7 @@
   .pagination .active {
     background-color: #00b894;
   }
+
 </style>
 
 <div class="card">
@@ -141,18 +141,26 @@
 
   <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
-  <div id="trabajadoresContainer" class="card-row">
+  <!-- Header -->
+  <div class="header-row">
+    <div class="col-nombre">Nombre</div>
+    <div class="col-email">Email</div>
+    <div class="col-activo">Activo</div>
+    <div class="col-sueldo">Sueldo Bruto</div>
+  
+  </div>
+
+  <!-- Lista -->
+  <div id="trabajadoresContainer">
     {% for t in trabajadores %}
       <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
-        <div class="row">
-          <div class="col-nombre"><strong>Nombre:</strong> {{ t.nombres }} {{ t.apellidos }}</div>
-          <div class="col-email"><strong>Email:</strong> {{ t.email }}</div>
-          <div class="col-activo"><strong>Activo:</strong> {{ t.activo|yesno:"Sí,No" }}</div>
-          <div class="col-sueldo"><strong>Sueldo Bruto:</strong> €{{ t.sueldo_bruto }}</div>
-        </div>
+        <div class="col-nombre-d">{{ t.nombres }} {{ t.apellidos }}</div>
+        <div class="col-email-d">{{ t.email }}</div>
+        <div class="col-activo-d">{{ t.activo|yesno:"Sí,No" }}</div>
+        <div class="col-sueldo-d">€{{ t.sueldo_bruto }}</div>
         <div class="acciones">
-          <a href="{% url 'trabajadores:editar' t.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-          <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" title="Eliminar"></i>
+          <a href="{% url 'trabajadores:editar' t.id %}" data-bs-toggle="tooltip" title="Editar"><i class="fas fa-edit"></i></a>
+          <i class="fas fa-trash" onclick="confirmDel({{ t.id }})" data-bs-toggle="tooltip" title="Eliminar"></i>
         </div>
       </div>
     {% endfor %}
@@ -259,6 +267,7 @@ document.getElementById("confirmExportExcel").addEventListener("click", function
 });
 </script>
 {% endblock %}
+
 
 
 
