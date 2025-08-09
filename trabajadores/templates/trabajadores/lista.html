@@ -22,18 +22,23 @@
   }
   .icon-btn:hover {
     transform: scale(1.15);
-    color: #00c6ff;
+    color: #0A0A0A;
+  }
+
+  .search-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
   }
 
   .search-box {
     max-width: 300px;
-    margin-bottom: 1rem;
   }
 
-  .header-row, .card-trabajador {
+  .header-row {
     display: flex;
     align-items: center;
-    padding: 0.8rem 1rem;
+    padding: 0.6rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.90rem;
   }
@@ -43,22 +48,25 @@
     border-left: 5px solid #8A8A8A; 
     font-weight: bold;
     box-shadow: 0 5px 5px rgba(0,0,0,0.25);
-    margin-bottom: 0.5rem;
+    margin: 0.8rem 0;
     text-transform: uppercase;
   }
 
   .card-trabajador {
+    display: flex;    
+    border-radius: 0.5rem;  
     background: white;
+    padding: 0.4rem 1rem;    
     border-left: 5px solid #28a745;
-    box-shadow: 0 6px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 0.7px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     position: relative;
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.6rem;
   }
 
   .card-trabajador:hover {
     transform: scale(1.01);
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.25);
   }
 
   .col-nombre { width: 30%; text-align: left;}
@@ -68,7 +76,6 @@
   .col-sueldo { width: 12%; text-align: right;}
 
   .acciones {
- 
     display: flex;
     gap: 0.6rem;
     align-items: center;
@@ -86,6 +93,14 @@
 
   .fa-edit { color: #17a2b8; }
   .fa-trash { color: #dc3545; }
+
+  .footer-info {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
 
   .pagination {
     margin-top: 2rem;
@@ -114,8 +129,11 @@
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="page-title">Relación de Trabajadores</h3>
+  </div>
 
-    <div class="d-flex gap-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
+    <div class="search-actions">
       <a href="{% url 'trabajadores:crear' %}" class="icon-btn" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
         <i class="fas fa-user-plus"></i>
       </a>
@@ -127,8 +145,6 @@
       </a>
     </div>
   </div>
-
-  <input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
 
   <!-- Header -->
   <div class="header-row">
@@ -156,7 +172,14 @@
     {% endfor %}
   </div>
 
-  <div class="pagination" id="paginacion"></div>
+  <div class="pagination" id="paginacion">
+
+
+  </div>
+    <div class="footer-info">
+      Total registros: <span id="totalRegistros" class="ms-1">{{ trabajadores|length|intcomma }}</span>
+    </div>
+
 </div>
 
 <script>
@@ -180,8 +203,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const container = document.getElementById("trabajadoresContainer");
   const paginacion = document.getElementById("paginacion");
+  const totalRegistros = document.getElementById("totalRegistros");
   const elementos = Array.from(container.children);
-  const porPagina = 5;
+  const porPagina = 6;
   let paginaActual = 1;
 
   function filtrar() {
@@ -217,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function actualizarVista() {
     const filtrados = filtrar();
+    totalRegistros.textContent = filtrados.length.toLocaleString('es-ES');
     paginaActual = 1;
     renderPagina(filtrados, paginaActual);
     renderPaginacion(filtrados);
@@ -257,6 +282,7 @@ document.getElementById("confirmExportExcel").addEventListener("click", function
 });
 </script>
 {% endblock %}
+
 
 
 
