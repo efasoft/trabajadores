@@ -5,52 +5,60 @@ db_params = {
     'host': '127.0.0.1',
     'database': 'db_trabajadores_521',
     'user': 'postgres',
-    'password': 'Espana21'
+    'password': 'Espana21',
+    'port': '5432'    
 }
 
-def grabar_ultimo_registro(db_params, num_repeticiones=1000):
-    """
-    Graba el último registro de la tabla especificada un número determinado de veces.
+# Nombre de la tabla y nombre de la columna del ID
+table_name = 'trabajadores_trabajador'
+id_column = 'id'
 
-    Args:
-        db_params (dict): Diccionario con los parámetros de conexión a la base de datos.
-        num_repeticiones (int, optional): Número de veces que se debe repetir la grabación. Defaults to 1000.
-    """
-    try:
-        # Conexión a la base de datos
-        conn = psycopg2.connect(**db_params)
-        cursor = conn.cursor()
+try:
+    # Conexión a la base de datos
+    conn = psycopg2.connect(**db_params)
+    cur = conn.cursor()
 
-        # Obtener el último registro insertado (necesitas adaptar la consulta a tu tabla)
-        cursor.execute("SELECT * FROM trabajadores_trabajador ORDER BY id DESC LIMIT 1;")  # Ajusta 'id' y 'tu_tabla'
-        ultimo_registro = cursor.fetchone()
+    # Paso 1: Obtener el último registro
+    # Obtener el registro y el orden de las columnas de la tabla
+    cur.execute(f"SELECT * FROM {table_name} ORDER BY {id_column} DESC LIMIT 1;")
+    last_record = cur.fetchone()
+    
+    if last_record:
+        # Obtener los nombres de todas las columnas y su índice
+        column_names = [desc[0] for desc in cur.description]
+        
+        # Encontrar el índice de la columna ID
+        id_index = column_names.index(id_column)
+        
+        # Paso 2: Preparar la inserción sin el ID
+        # Excluir la columna ID de la lista de columnas para el INSERT
+        columns_to_insert = [col for col in column_names if col != id_column]
+        
+        # Crear la instrucción SQL de inserción
+        placeholders = ', '.join(['%s'] * len(columns_to_insert))
+        insert_query = f"INSERT INTO {table_name} ({', '.join(columns_to_insert)}) VALUES ({placeholders})"
+        
+        # Paso 3: Repetir la inserción 100 veces
+        for _ in range(1000):
+            # Crear una lista de valores para la inserción, excluyendo el ID
+            # Copiar la lista last_record y eliminar el valor en el índice del ID
+            values = list(last_record)
+            values.pop(id_index)
+            
+            cur.execute(insert_query, values)
 
-        if ultimo_registro:
-            # Preparar la consulta de inserción
-            columnas = [desc[0] for desc in cursor.description]
-            valores = tuple(ultimo_registro)
-            placeholders = ', '.join(['%s'] * len(columnas))
-            consulta_insert = f"INSERT INTO tu_tabla ({', '.join(columnas)}) VALUES ({placeholders}) RETURNING id;" #Ajusta 'tu_tabla' y el nombre de la columna de id
+        # Confirmar los cambios
+        conn.commit()
+        print("Registros duplicados insertados con éxito.")
 
-            # Repetir la inserción
-            for _ in range(num_repeticiones):
-                cursor.execute(consulta_insert, valores)
-                #Si necesitas el id del registro insertado, puedes usar:
-                id_insertado = cursor.fetchone()[0]
-                print(f"Registro insertado con ID: {id_insertado}") #Muestra el id del registro insertado
-            conn.commit() #Confirmar los cambios
+    else:
+        print("No se encontraron registros en la tabla.")
 
-        else:
-            print("No se encontraron registros en la tabla.")
+except psycopg2.Error as e:
+    print(f"Error al conectar o ejecutar la consulta: {e}")
 
-
-    except psycopg2.Error as e:
-        print(f"Error al conectar o insertar datos: {e}")
-    finally:
-        if conn:
-            cursor.close()
-            conn.close()
-            print("Conexión cerrada.")
-
-# Ejecutar la función
-grabar_ultimo_registro(db_params)
+finally:
+    # Cerrar la conexión
+    if 'conn' in locals() and conn:
+        cur.close()
+        conn.close()

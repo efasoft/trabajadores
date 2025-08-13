@@ -71,7 +71,7 @@
 
   .card-trabajador:hover {
     transform: scale(1.01);
-    background-color: #f0f0f0;  
+    background-color: #f4f4f4;  
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
   }
 
@@ -228,23 +228,56 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderPaginacion(items) {
     paginacion.innerHTML = "";
     const total = Math.ceil(items.length / porPagina);
-    for (let i = 1; i <= total; i++) {
+    const maxVisible = 5;
+    let start = Math.max(1, paginaActual - Math.floor(maxVisible / 2));
+    let end = Math.min(total, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    // Botón primera página
+    if (paginaActual > 1) {
+      const first = document.createElement("button");
+      first.innerHTML = '<i class="fas fa-angle-double-left"></i>';
+      first.onclick = () => { paginaActual = 1; actualizarVista(); };
+      paginacion.appendChild(first);
+
+      const prev = document.createElement("button");
+      prev.innerHTML = '<i class="fas fa-angle-left"></i>';
+      prev.onclick = () => { paginaActual--; actualizarVista(); };
+      paginacion.appendChild(prev);
+    }
+
+    // Botones de páginas
+    for (let i = start; i <= end; i++) {
       const btn = document.createElement("button");
       btn.textContent = i;
       if (i === paginaActual) btn.classList.add("active");
       btn.addEventListener("click", () => {
         paginaActual = i;
-        renderPagina(items, paginaActual);
-        renderPaginacion(items);
+        actualizarVista();
       });
       paginacion.appendChild(btn);
+    }
+
+    // Botón siguiente página
+    if (paginaActual < total) {
+      const next = document.createElement("button");
+      next.innerHTML = '<i class="fas fa-angle-right"></i>';
+      next.onclick = () => { paginaActual++; actualizarVista(); };
+      paginacion.appendChild(next);
+
+      const last = document.createElement("button");
+      last.innerHTML = '<i class="fas fa-angle-double-right"></i>';
+      last.onclick = () => { paginaActual = total; actualizarVista(); };
+      paginacion.appendChild(last);
     }
   }
 
   function actualizarVista() {
     const filtrados = filtrar();
     totalRegistros.textContent = filtrados.length.toLocaleString('es-ES');
-    paginaActual = 1;
     renderPagina(filtrados, paginaActual);
     renderPaginacion(filtrados);
   }
