@@ -216,12 +216,14 @@ function confirmDel(id) {
   }).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
 }
 
+
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const container = document.getElementById("trabajadoresContainer");
   const paginacion = document.getElementById("paginacion");
   const totalRegistros = document.getElementById("totalRegistros");
   const elementos = Array.from(container.children);
+  const totalOriginal = elementos.length;
   const porPagina = 10;
   let paginaActual = 1;
   let scrollTimeout;
@@ -231,14 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return elementos.filter(el =>
       el.dataset.nombre.includes(query) || el.dataset.email.includes(query)
     );
-  }
-
-  function renderPagina(items, pagina) {
-    container.innerHTML = "";
-    const startIndex = (pagina - 1) * porPagina;
-    const endIndex = startIndex + porPagina;
-    items.slice(startIndex, endIndex).forEach(el => container.appendChild(el));
-    container.style.overflowY = (items.length > porPagina) ? "auto" : "hidden";
   }
 
   function renderPaginacion(items) {
@@ -269,13 +263,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.cambiarPagina = function(num) {
     paginaActual = num;
-    actualizarVista();
+    const scrollY = (paginaActual - 1) * porPagina * (container.firstElementChild?.offsetHeight || 30);
+    container.scrollTop = scrollY;
+    renderPaginacion(filtrar());
   };
 
   function actualizarVista() {
     const filtrados = filtrar();
-    totalRegistros.textContent = filtrados.length.toLocaleString('es-ES');
-    renderPagina(filtrados, paginaActual);
+    container.innerHTML = "";
+    filtrados.forEach(el => container.appendChild(el));
+    totalRegistros.textContent = `${filtrados.length.toLocaleString('es-ES')} de ${totalOriginal.toLocaleString('es-ES')}`;
     renderPaginacion(filtrados);
   }
 

@@ -348,48 +348,6 @@ def exportar_pdf(request):
     return response
 
 
-"""
-@login_required
-def editar_trabajador(request, trabajador_id):
-    trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
-    if request.method == 'POST':
-        form = TrabajadorForm(request.POST, request.FILES, instance=trabajador)
-        if form.is_valid():
-            data = form.cleaned_data.copy()
-
-            # Formatear fecha si es string
-            if isinstance(data['fecha'], str):
-                try:
-                    data['fecha'] = datetime.strptime(data['fecha'], "%d-%m-%Y").date()
-                except ValueError:
-                    messages.error(request, "Formato de fecha inválido. Use DD-MM-AAAA.")
-                    return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Editar'})
-
-            # Foto nueva o mantener actual
-            foto = request.FILES.get('foto')
-            data['foto'] = foto.name if foto else trabajador.foto.name
-
-            try:
-                TrabajadorModel(**data)
-                trabajador = form.save(commit=False)
-                trabajador.sueldo_bruto = trabajador.sueldo_base + trabajador.comision
-                trabajador.save()
-                messages.success(request, 'Trabajador actualizado correctamente.')                
-                return redirect('listar_trabajadores')
-            except Exception as e:
-                sweet_error(request, str(e).replace("Value error,", ""))
-    else:
-        form = TrabajadorForm(instance=trabajador)
-    return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Editar'})
-
-
-@login_required
-def eliminar_trabajador(request, pk):
-    trabajador = get_object_or_404(Trabajador, pk=pk)
-    trabajador.delete()
-    return redirect('listar_trabajadores')
-  
-"""
 
 
 
