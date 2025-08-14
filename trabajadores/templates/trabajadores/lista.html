@@ -119,17 +119,40 @@
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
+    transition: all 0.2s ease;
   }
   .pagination button:hover {
     background-color: #005ecb;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
   }
   .pagination .active {
     background-color: #00b894;
   }
+
+  /* Scroll vertical separado */
+  #trabajadoresContainer {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f0f0f0;
+    max-height: calc(5 * 3.2rem);
+    padding-right: 8px; /* separación extra para que el scroll no pegue con el contenido */
+  }
+  #trabajadoresContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+  #trabajadoresContainer::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+  #trabajadoresContainer::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+  }
+
 </style>
 
 <div class="card">
-
   <div class="d-flex justify-content-between align-items-center">
     <h3 class="page-title">Relación de Trabajadores</h3>
   </div>
@@ -149,7 +172,6 @@
     </div>
   </div>
 
-  <!-- Header -->
   <div class="header-row">
     <div class="col-nombre">Nombre</div>
     <div class="col-email">Email</div>
@@ -158,7 +180,6 @@
     <div class="col-sueldo">Sueldo Bruto €</div>
   </div>
 
-  <!-- Lista -->
   <div id="trabajadoresContainer">
     {% for t in trabajadores %}
       <div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
@@ -181,7 +202,6 @@
       Total registros: <span id="totalRegistros">{{ trabajadores|length|intcomma }}</span>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -196,11 +216,6 @@ function confirmDel(id) {
   }).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
-});
-
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const container = document.getElementById("trabajadoresContainer");
@@ -209,6 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const elementos = Array.from(container.children);
   const porPagina = 10;
   let paginaActual = 1;
+  let scrollTimeout;
 
   function filtrar() {
     const query = searchInput.value.toLowerCase();
@@ -219,10 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderPagina(items, pagina) {
     container.innerHTML = "";
-    const start = (pagina - 1) * porPagina;
-    const end = start + porPagina;
-    const paginaItems = items.slice(start, end);
-    paginaItems.forEach(el => container.appendChild(el));
+    const startIndex = (pagina - 1) * porPagina;
+    const endIndex = startIndex + porPagina;
+    items.slice(startIndex, endIndex).forEach(el => container.appendChild(el));
+    container.style.overflowY = (items.length > porPagina) ? "auto" : "hidden";
   }
 
   function renderPaginacion(items) {
@@ -236,44 +252,25 @@ document.addEventListener("DOMContentLoaded", () => {
       start = Math.max(1, end - maxVisible + 1);
     }
 
-    // Botón primera página
     if (paginaActual > 1) {
-      const first = document.createElement("button");
-      first.innerHTML = '<i class="fas fa-angle-double-left"></i>';
-      first.onclick = () => { paginaActual = 1; actualizarVista(); };
-      paginacion.appendChild(first);
-
-      const prev = document.createElement("button");
-      prev.innerHTML = '<i class="fas fa-angle-left"></i>';
-      prev.onclick = () => { paginaActual--; actualizarVista(); };
-      paginacion.appendChild(prev);
+      paginacion.innerHTML += `<button onclick="cambiarPagina(1)"><i class="fas fa-angle-double-left"></i></button>`;
+      paginacion.innerHTML += `<button onclick="cambiarPagina(${paginaActual - 1})"><i class="fas fa-angle-left"></i></button>`;
     }
 
-    // Botones de páginas
     for (let i = start; i <= end; i++) {
-      const btn = document.createElement("button");
-      btn.textContent = i;
-      if (i === paginaActual) btn.classList.add("active");
-      btn.addEventListener("click", () => {
-        paginaActual = i;
-        actualizarVista();
-      });
-      paginacion.appendChild(btn);
+      paginacion.innerHTML += `<button class="${i===paginaActual?'active':''}" onclick="cambiarPagina(${i})">${i}</button>`;
     }
 
-    // Botón siguiente página
     if (paginaActual < total) {
-      const next = document.createElement("button");
-      next.innerHTML = '<i class="fas fa-angle-right"></i>';
-      next.onclick = () => { paginaActual++; actualizarVista(); };
-      paginacion.appendChild(next);
-
-      const last = document.createElement("button");
-      last.innerHTML = '<i class="fas fa-angle-double-right"></i>';
-      last.onclick = () => { paginaActual = total; actualizarVista(); };
-      paginacion.appendChild(last);
+      paginacion.innerHTML += `<button onclick="cambiarPagina(${paginaActual + 1})"><i class="fas fa-angle-right"></i></button>`;
+      paginacion.innerHTML += `<button onclick="cambiarPagina(${total})"><i class="fas fa-angle-double-right"></i></button>`;
     }
   }
+
+  window.cambiarPagina = function(num) {
+    paginaActual = num;
+    actualizarVista();
+  };
 
   function actualizarVista() {
     const filtrados = filtrar();
@@ -282,7 +279,25 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPaginacion(filtrados);
   }
 
-  searchInput.addEventListener("input", actualizarVista);
+  // Sincronizar número de página con scroll
+  container.addEventListener("scroll", () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const scrollTop = container.scrollTop;
+      const filaAltura = container.firstElementChild ? container.firstElementChild.offsetHeight : 30;
+      const nuevaPagina = Math.floor(scrollTop / (filaAltura * porPagina)) + 1;
+      if (nuevaPagina !== paginaActual) {
+        paginaActual = nuevaPagina;
+        renderPaginacion(filtrar());
+      }
+    }, 100);
+  });
+
+  searchInput.addEventListener("input", () => {
+    paginaActual = 1;
+    actualizarVista();
+  });
+
   actualizarVista();
 });
 </script>
@@ -317,6 +332,8 @@ document.getElementById("confirmExportExcel").addEventListener("click", function
 });
 </script>
 {% endblock %}
+
+
 
 
 
