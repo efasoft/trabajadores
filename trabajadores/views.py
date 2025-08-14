@@ -241,48 +241,22 @@ def exportar_excel(request):
     return response
 
 @login_required
+@login_required
 def exportar_pdf(request):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
         pagesize=landscape(A4),
-        leftMargin=1.5 * cm,
-        rightMargin=1.5 * cm,
-        topMargin=1.5 * cm,
+        leftMargin=1 * cm,
+        rightMargin=1 * cm,
+        topMargin=3.5 * cm,  # espacio para encabezado repetido
         bottomMargin=1.5 * cm,
     )
 
+    estilos = getSampleStyleSheet()
     elementos = []
 
-    # Logo
-    logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'img', 'efa_soft.jpg')
-    try:
-        img = Image(logo_path, width=3 * cm, height=3 * cm)
-    except:
-        img = Paragraph("", getSampleStyleSheet()['Normal'])
-
-    # Título y fecha
-    estilos = getSampleStyleSheet()
-    titulo = Paragraph("<b style='font-size:18pt;color:#003c3c;'>REPORTE GENERAL DE TRABAJADORES</b>", estilos['Title'])
-    fecha = Paragraph(f"<para align='right'>Emitido: {datetime.now().strftime('%d/%m/%Y')}</para>", estilos['Normal'])
-
-    header = Table([[img, titulo, fecha]], colWidths=[4*cm, 16*cm, 8*cm])
-    header.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
-    ]))
-    elementos.append(header)
-    elementos.append(Spacer(1, 12))
-
-    # Encabezado
-    encabezado = [
-        "NOMBRES", "APELLIDOS", "EMAIL", "ACTIVO", "SUELDO BRUTO",
-        "FECHA", "EDAD", "TEL. CASA", "TEL. MÓVIL"
-    ]
-
-    data = [encabezado]
-    # Aplicar filtro si viene desde búsqueda
+    # Filtro de búsqueda
     filtro = request.GET.get('q', '').lower()
     trabajadores = Trabajador.objects.all()
     if filtro:
@@ -294,63 +268,72 @@ def exportar_pdf(request):
             email__icontains=filtro
         )
 
+    # Datos de tabla
+    encabezado = [
+        "NOMBRES", "APELLIDOS", "EMAIL", "EDAD", "FECHA",
+        "TEL. CASA", "TEL. MOVIL", "SUELDO BRUTO €", "ACTIVO"
+    ]
+    data = [encabezado]
     for t in trabajadores:
         data.append([
-            t.nombres,
-            t.apellidos,
+            Paragraph(f"<u>{t.nombres}</u>", estilos['Normal']),
+            Paragraph(f"<u>{t.apellidos}</u>", estilos['Normal']),
             t.email,
-            "Sí" if t.activo else "No",
-            f"€{t.sueldo_bruto:,.2f}",
+            t.edad,
             t.fecha.strftime("%d/%m/%Y") if t.fecha else "",
-            str(t.edad),
             t.telefono_casa,
             t.telefono_movil,
+            f"{t.sueldo_bruto:,.2f}",
+            "SI" if t.activo else "NO"
         ])
+    # Total
+    data.append(["", "", "", "", "", "", "", "", f"{trabajadores.count()}"])
 
-    # Total trabajadores
-    total_row = ["", "", "", "", "", "", "", "", f"Total: {trabajadores.count()}"]
-    data.append(total_row)
-
-    col_just = ['LEFT', 'LEFT', 'LEFT', 'CENTER', 'RIGHT', 'CENTER', 'CENTER', 'CENTER', 'CENTER']
-    tabla = Table(data, repeatRows=1, colWidths=[4.5*cm, 4.5*cm, 6*cm, 2*cm, 3*cm, 2*cm, 1.3*cm, 2.2*cm, 2.2*cm])
+    col_widths = [4*cm, 4*cm, 6*cm, 2*cm, 3*cm, 3*cm, 3*cm, 3*cm, 2*cm]
+    tabla = Table(data, repeatRows=1, colWidths=col_widths)
 
     estilo = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#003c3c")),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2F4F2F")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('ROWBACKGROUNDS', (1, 1), (-1, -2), [colors.whitesmoke, colors.lightgrey]),
-        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.whitesmoke, colors.HexColor("#EDEDED")]),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.green),
+        ('ALIGN', (3, 1), (3, -2), 'CENTER'),  # edad
+        ('ALIGN', (4, 1), (4, -2), 'CENTER'),  # fecha
+        ('ALIGN', (7, 1), (7, -2), 'RIGHT'),   # sueldo
+        ('ALIGN', (8, 1), (8, -2), 'CENTER'),  # activo
+        ('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold'),
+        ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
     ])
-
-    # Alineación individual por columna
-    for idx, align in enumerate(col_just):
-        estilo.add('ALIGN', (idx, 1), (idx, -2), align)
-
-    # Totales en negrita y alineados a la derecha
-    estilo.add('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold')
-    estilo.add('ALIGN', (-1, -1), (-1, -1), 'RIGHT')
-
     tabla.setStyle(estilo)
+
     elementos.append(tabla)
 
-    doc.build(elementos)
+    # Encabezado repetido en cada página
+    def encabezado_pdf(canvas, doc):
+        canvas.saveState()
+        logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'img', 'efa_soft.jpg')
+        if os.path.exists(logo_path):
+            canvas.drawImage(logo_path, 1 * cm, A4[0] - 2.5 * cm, width=4 * cm, height=2 * cm, preserveAspectRatio=True)
+        canvas.setFont("Helvetica-Bold", 14)
+        canvas.drawString(10 * cm, A4[0] - 1.2 * cm, "RELACIÓN DE TRABAJADORES")
+        canvas.setFont("Helvetica", 10)
+        canvas.drawString(10 * cm, A4[0] - 2.0 * cm, "Datos por Ubicación")
+        canvas.setFont("Helvetica", 8)
+        fecha_str = datetime.now().strftime('%d/%m/%Y')
+        canvas.drawRightString(A4[1] - 2 * cm, A4[0] - 1.2 * cm, f"Emitido : {fecha_str}")
+        canvas.drawRightString(A4[1] - 2 * cm, A4[0] - 2.0 * cm, f"Página : {doc.page} de ")
+
+        canvas.restoreState()
+
+    doc.build(elementos, onFirstPage=encabezado_pdf, onLaterPages=encabezado_pdf)
+
     buffer.seek(0)
-
     response = HttpResponse(buffer, content_type='application/pdf')
+    filename = "reporte_trabajadores.pdf"
     if request.GET.get('descargar') == '1':
-        response['Content-Disposition'] = 'attachment; filename="reporte_trabajadores.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
     else:
-        response['Content-Disposition'] = 'inline; filename="reporte_trabajadores.pdf"'
-
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
-
-
-
-
-
-
-
-
