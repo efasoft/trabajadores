@@ -284,7 +284,6 @@ def exportar_pdf(request):
         bottomMargin=0.95 * cm,
     )
 
-    estilos = getSampleStyleSheet()
     elementos = []
 
     # Filtro
@@ -302,33 +301,35 @@ def exportar_pdf(request):
     # Ordenar por activo (True primero, luego False)
     trabajadores = trabajadores.order_by('-activo', 'apellidos', 'nombres')
 
-    # Calcular subtotales
-    total_activos = trabajadores.filter(activo=True).count()
-    total_inactivos = trabajadores.filter(activo=False).count()
-
     # Datos
     encabezado = [
-        "NOMBRES", "APELLIDOS", "EMAIL", "EDAD", "FECHA",
+        "APELLIDOS", "NOMBRES", "EMAIL", "EDAD", "FECHA",
         "TEL. CASA", "TEL. MOVIL", "SUELDO BRUTO €", "ACTIVO"
     ]
     data = [encabezado]
 
-        # Variables para subtotales
+    estilo = TableStyle([])
     total_grupo = 0
     estado_actual = None
     total_general = 0
 
     for t in trabajadores:
+
+
         # Detectar cambio de grupo y agregar subtotal formateado
         if estado_actual is not None and estado_actual != t.activo:
             idx = len(data)
-            data.append(["", "", "", "", "", "", "", f"Total {'SI' if estado_actual else 'NO'}", f"{total_grupo:,.0f}"])
-            estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#999999"))
+            data.append(["", "", "", "", "", "", "", f"Total {'Activos' if estado_actual else 'Inactivos'}", f"{total_grupo:,.0f}"])
+            estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#666666"))
             estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
             estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
             estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
             estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
             estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
+            # Línea arriba y abajo de títulos    
+            estilo.add('LINEABOVE', (7, idx), (-1, idx), 2, colors.HexColor("#707070"))
+            estilo.add('LINEBELOW', (7, idx), (-1, idx), 2, colors.HexColor("#707070"))
+
             total_grupo = 0
 
         estado_actual = t.activo
@@ -336,8 +337,8 @@ def exportar_pdf(request):
         total_general += 1
 
         data.append([
+            t.apellidos,            
             t.nombres,
-            t.apellidos,
             t.email,
             t.edad,
             t.fecha.strftime("%d/%m/%Y") if t.fecha else "",
@@ -346,67 +347,70 @@ def exportar_pdf(request):
             f"{t.sueldo_bruto:,.2f}",
             "SI" if t.activo else "NO"
         ])
+
     # Subtotal del último grupo
     if estado_actual is not None:
         idx = len(data)
-        data.append(["", "", "", "", "", "", "", f"Total {'SI' if estado_actual else 'NO'}", f"{total_grupo:,.0f}"])
-        estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#999999"))
+        data.append(["", "", "", "", "", "", "", f"Total {'Activo' if estado_actual else 'Inactivo'}", f"{total_grupo:,.0f}"])
+        estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#6599E6"))
         estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
         estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
         estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
         estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
         estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
 
+        # Línea arriba y abajo de títulos    
+        estilo.add('LINEABOVE', (7, idx), (-1, idx), 2, colors.HexColor("#707070"))
+        estilo.add('LINEBELOW', (7, idx), (-1, idx), 2, colors.HexColor("#707070"))
+
+
     # Total general
     idx = len(data)
     data.append(["", "", "", "", "", "", "", f"Total General", f"{total_general:,.0f}"])
-    estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#666666"))
+    estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#999999"))
     estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
     estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
     estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
     estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
     estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
+    # Línea arriba y abajo de títulos    
+    estilo.add('LINEABOVE', (0, idx), (-1, idx), 2, colors.HexColor("#707070"))
+    estilo.add('LINEBELOW', (0, idx), (-1, idx), 2, colors.HexColor("#707070"))
+
+
 
     col_widths = [6*cm, 6*cm, 5.5*cm, 1*cm, 2*cm, 2*cm, 2*cm, 3*cm, 1.5*cm]
     tabla = Table(data, repeatRows=1, colWidths=col_widths)
 
-    estilo = TableStyle([
-        # Fondo y texto de cabecera       
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#999999")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 8),
+    # Fondo y texto de cabecera   
+    estilo.add('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#999999"))
+    estilo.add('TEXTCOLOR', (0, 0), (-1, 0), colors.white)
+    estilo.add('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold')
+    estilo.add('FONTSIZE', (0, 0), (-1, 0), 8.5)
 
-        # Espaciado vertical de títulos
-        ('TOPPADDING', (0, 0), (-1, 0), 8),   # empuja texto hacia abajo (línea azul más lejos arriba)
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),# empuja texto hacia arriba (línea azul más lejos abajo)
+    # Espaciado vertical de títulos    
+    estilo.add('TOPPADDING', (0, 0), (-1, 0), 8)
+    estilo.add('BOTTOMPADDING', (0, 0), (-1, 0), 8)
 
-        # Línea azul arriba y abajo de títulos
-        ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor("#707070")),
-        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor("#707070")),
-
-
-        ('LEADING', (-2, 0), (-1, 0), 11),  # altura de títulos mayor
-        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.whitesmoke, colors.HexColor("#EDEDED")]),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor("#FAFAFA")),
-        ('GRID', (0, 0), (-1, -1), 0, colors.HexColor("#FAFAFA")),
-        ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),  # sin líneas verticales
+    # Línea arriba y abajo de títulos    
+    estilo.add('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor("#707070"))
+    estilo.add('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor("#707070"))
 
 
-        # Alineaciones de títulos y datos
-        ('ALIGN', (0, 0), (2, -1), 'LEFT'),     # nombres, apellidos, email
-        ('ALIGN', (3, 0), (6, -2), 'CENTER'),   # edad, fecha, tel casa, tel movil
-        ('ALIGN', (7, 0), (7, 3), 'CENTER'),    # título sueldo centrado
-        ('ALIGN', (7, 1), (7, -2), 'RIGHT'),    # datos sueldo
-        ('ALIGN', (8, 0), (8, -2), 'CENTER'),   # activo
-        ('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold'),
-        ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
+    estilo.add('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.whitesmoke, colors.HexColor("#EDEDED")])
 
-        # Alinear a la derecha totales
-        ('ALIGN', (-1, -3), (-1, -1), 'RIGHT'),  # total_grupo y total_general
-        ('FONTNAME', (-2, -3), (-1, -1), 'Helvetica-Bold'),
+    # Alineaciones de títulos y datos    
+    estilo.add('ALIGN', (0, 0), (2, -1), 'LEFT')      # nombres, apellidos, email
+    estilo.add('ALIGN', (3, 0), (6, -2), 'CENTER')    # edad, fecha, tel casa, tel movil
+    estilo.add('ALIGN', (7, 0), (7, 3), 'CENTER')     # título sueldo centrado   
+    estilo.add('ALIGN', (7, 1), (7, -2), 'RIGHT')     # datos sueldo
+    estilo.add('ALIGN', (8, 0), (8, -2), 'CENTER')    # activo
 
-    ])
+    # Formatear Linea de Datos
+    estilo.add('TEXTCOLOR', (0, 1), (-1, -1), colors.black)
+    estilo.add('FONTNAME', (0, 1), (-1, -10), 'Helvetica')
+    estilo.add('FONTSIZE', (0, 1), (-1, -1), 8.5)      
+    
     tabla.setStyle(estilo)
     elementos.append(tabla)
 
