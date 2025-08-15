@@ -152,6 +152,7 @@ def eliminar_trabajador(request, trabajador_id):
         messages.error(request, "El trabajador no existe.")
     return HttpResponseRedirect(reverse('trabajadores:listar'))
 
+
 @login_required
 def exportar_excel(request):
     filtro = request.GET.get('q', '').lower()
@@ -240,23 +241,53 @@ def exportar_excel(request):
     wb.save(response)
     return response
 
-@login_required
+
+# Clase personalizada para contar páginas
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        """Escribe el número total de páginas en cada página"""
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_number(self, page_count):
+        self.setFont("Helvetica", 8)
+        self.drawRightString(
+            A4[1] - 0.9 * cm,
+            A4[0] - 2.5 * cm,
+            f"Página : {self._pageNumber} de {page_count}"
+        )
+
+
+
+# Creacion del PDF
 @login_required
 def exportar_pdf(request):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
         pagesize=landscape(A4),
-        leftMargin=1 * cm,
-        rightMargin=1 * cm,
-        topMargin=3.5 * cm,  # espacio para encabezado repetido
-        bottomMargin=1.5 * cm,
+        leftMargin=1.5 * cm,  # separación en márgenes laterales
+        rightMargin=1.5 * cm,
+        topMargin=2.5 * cm,
+        bottomMargin=0.95 * cm,
     )
 
     estilos = getSampleStyleSheet()
     elementos = []
 
-    # Filtro de búsqueda
+    # Filtro
     filtro = request.GET.get('q', '').lower()
     trabajadores = Trabajador.objects.all()
     if filtro:
@@ -268,16 +299,45 @@ def exportar_pdf(request):
             email__icontains=filtro
         )
 
-    # Datos de tabla
+    # Ordenar por activo (True primero, luego False)
+    trabajadores = trabajadores.order_by('-activo', 'apellidos', 'nombres')
+
+    # Calcular subtotales
+    total_activos = trabajadores.filter(activo=True).count()
+    total_inactivos = trabajadores.filter(activo=False).count()
+
+    # Datos
     encabezado = [
         "NOMBRES", "APELLIDOS", "EMAIL", "EDAD", "FECHA",
         "TEL. CASA", "TEL. MOVIL", "SUELDO BRUTO €", "ACTIVO"
     ]
     data = [encabezado]
+
+        # Variables para subtotales
+    total_grupo = 0
+    estado_actual = None
+    total_general = 0
+
     for t in trabajadores:
+        # Detectar cambio de grupo y agregar subtotal formateado
+        if estado_actual is not None and estado_actual != t.activo:
+            idx = len(data)
+            data.append(["", "", "", "", "", "", "", f"Total {'SI' if estado_actual else 'NO'}", f"{total_grupo:,.0f}"])
+            estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#999999"))
+            estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
+            estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
+            estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
+            estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
+            estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
+            total_grupo = 0
+
+        estado_actual = t.activo
+        total_grupo += 1
+        total_general += 1
+
         data.append([
-            Paragraph(f"<u>{t.nombres}</u>", estilos['Normal']),
-            Paragraph(f"<u>{t.apellidos}</u>", estilos['Normal']),
+            t.nombres,
+            t.apellidos,
             t.email,
             t.edad,
             t.fecha.strftime("%d/%m/%Y") if t.fecha else "",
@@ -286,48 +346,89 @@ def exportar_pdf(request):
             f"{t.sueldo_bruto:,.2f}",
             "SI" if t.activo else "NO"
         ])
-    # Total
-    data.append(["", "", "", "", "", "", "", "", f"{trabajadores.count()}"])
+    # Subtotal del último grupo
+    if estado_actual is not None:
+        idx = len(data)
+        data.append(["", "", "", "", "", "", "", f"Total {'SI' if estado_actual else 'NO'}", f"{total_grupo:,.0f}"])
+        estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#999999"))
+        estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
+        estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
+        estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
+        estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
+        estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
 
-    col_widths = [4*cm, 4*cm, 6*cm, 2*cm, 3*cm, 3*cm, 3*cm, 3*cm, 2*cm]
+    # Total general
+    idx = len(data)
+    data.append(["", "", "", "", "", "", "", f"Total General", f"{total_general:,.0f}"])
+    estilo.add('BACKGROUND', (0, idx), (-1, idx), colors.HexColor("#666666"))
+    estilo.add('TEXTCOLOR', (0, idx), (-1, idx), colors.white)
+    estilo.add('FONTNAME', (0, idx), (-1, idx), 'Helvetica-Bold')
+    estilo.add('ALIGN', (-1, idx), (-1, idx), 'RIGHT')
+    estilo.add('TOPPADDING', (0, idx), (-1, idx), 6)
+    estilo.add('BOTTOMPADDING', (0, idx), (-1, idx), 6)
+
+    col_widths = [6*cm, 6*cm, 5.5*cm, 1*cm, 2*cm, 2*cm, 2*cm, 3*cm, 1.5*cm]
     tabla = Table(data, repeatRows=1, colWidths=col_widths)
 
     estilo = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2F4F2F")),
+        # Fondo y texto de cabecera       
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#999999")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+
+        # Espaciado vertical de títulos
+        ('TOPPADDING', (0, 0), (-1, 0), 8),   # empuja texto hacia abajo (línea azul más lejos arriba)
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),# empuja texto hacia arriba (línea azul más lejos abajo)
+
+        # Línea azul arriba y abajo de títulos
+        ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor("#707070")),
+        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor("#707070")),
+
+
+        ('LEADING', (-2, 0), (-1, 0), 11),  # altura de títulos mayor
         ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.whitesmoke, colors.HexColor("#EDEDED")]),
-        ('GRID', (0, 0), (-1, -1), 0.25, colors.green),
-        ('ALIGN', (3, 1), (3, -2), 'CENTER'),  # edad
-        ('ALIGN', (4, 1), (4, -2), 'CENTER'),  # fecha
-        ('ALIGN', (7, 1), (7, -2), 'RIGHT'),   # sueldo
-        ('ALIGN', (8, 1), (8, -2), 'CENTER'),  # activo
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor("#FAFAFA")),
+        ('GRID', (0, 0), (-1, -1), 0, colors.HexColor("#FAFAFA")),
+        ('INNERGRID', (0, 0), (-1, -1), 0, colors.white),  # sin líneas verticales
+
+
+        # Alineaciones de títulos y datos
+        ('ALIGN', (0, 0), (2, -1), 'LEFT'),     # nombres, apellidos, email
+        ('ALIGN', (3, 0), (6, -2), 'CENTER'),   # edad, fecha, tel casa, tel movil
+        ('ALIGN', (7, 0), (7, 3), 'CENTER'),    # título sueldo centrado
+        ('ALIGN', (7, 1), (7, -2), 'RIGHT'),    # datos sueldo
+        ('ALIGN', (8, 0), (8, -2), 'CENTER'),   # activo
         ('FONTNAME', (-1, -1), (-1, -1), 'Helvetica-Bold'),
         ('ALIGN', (-1, -1), (-1, -1), 'CENTER'),
+
+        # Alinear a la derecha totales
+        ('ALIGN', (-1, -3), (-1, -1), 'RIGHT'),  # total_grupo y total_general
+        ('FONTNAME', (-2, -3), (-1, -1), 'Helvetica-Bold'),
+
     ])
     tabla.setStyle(estilo)
-
     elementos.append(tabla)
 
-    # Encabezado repetido en cada página
+    # Encabezado repetido
     def encabezado_pdf(canvas, doc):
         canvas.saveState()
         logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'img', 'efa_soft.jpg')
         if os.path.exists(logo_path):
-            canvas.drawImage(logo_path, 1 * cm, A4[0] - 2.5 * cm, width=4 * cm, height=2 * cm, preserveAspectRatio=True)
+            canvas.drawImage(logo_path, 0.1 * cm, A4[0] - 2.5 * cm, width=4 * cm, height=2 * cm, preserveAspectRatio=True)
+        # Títulos alineados a la derecha en líneas separadas
         canvas.setFont("Helvetica-Bold", 14)
-        canvas.drawString(10 * cm, A4[0] - 1.2 * cm, "RELACIÓN DE TRABAJADORES")
-        canvas.setFont("Helvetica", 10)
-        canvas.drawString(10 * cm, A4[0] - 2.0 * cm, "Datos por Ubicación")
+        canvas.drawRightString(A4[1] - 0.4 * cm, A4[0] - 0.9 * cm, "RELACIÓN DE TRABAJADORES")
+        canvas.setFont("Helvetica", 12)
+        canvas.drawRightString(A4[1] - 0.4 * cm, A4[0] - 1.4 * cm, "Datos por Ubicación")
         canvas.setFont("Helvetica", 8)
         fecha_str = datetime.now().strftime('%d/%m/%Y')
-        canvas.drawRightString(A4[1] - 2 * cm, A4[0] - 1.2 * cm, f"Emitido : {fecha_str}")
-        canvas.drawRightString(A4[1] - 2 * cm, A4[0] - 2.0 * cm, f"Página : {doc.page} de ")
-
+        canvas.drawRightString(A4[1] - 0.4 * cm, A4[0] - 2.1 * cm, f"Emitido : {fecha_str}")
         canvas.restoreState()
 
-    doc.build(elementos, onFirstPage=encabezado_pdf, onLaterPages=encabezado_pdf)
+    # Usar NumberedCanvas para total de páginas
+    doc.build(elementos, onFirstPage=encabezado_pdf, onLaterPages=encabezado_pdf, canvasmaker=NumberedCanvas)
+
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
@@ -337,3 +438,4 @@ def exportar_pdf(request):
     else:
         response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
+
