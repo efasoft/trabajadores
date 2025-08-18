@@ -39,7 +39,7 @@ try:
         insert_query = f"INSERT INTO {table_name} ({', '.join(columns_to_insert)}) VALUES ({placeholders})"
         
         # Paso 3: Repetir la inserción 100 veces
-        for _ in range(100000):
+        for _ in range(10000):
             # Crear una lista de valores para la inserción, excluyendo el ID
             # Copiar la lista last_record y eliminar el valor en el índice del ID
             values = list(last_record)

@@ -264,11 +264,17 @@ class NumberedCanvas(canvas.Canvas):
     def draw_page_number(self, page_count):
         self.setFont("Helvetica", 8)
         self.drawRightString(
-            A4[1] - 0.9 * cm,
+            A4[1] - 1.17 * cm,
             A4[0] - 2.5 * cm,
-            f"Página : {self._pageNumber} de {page_count}"
-        )
+            f"Página :            "
 
+
+        )
+        self.drawRightString(
+            A4[1] - 0.42 * cm,
+            A4[0] - 2.5 * cm,
+            f"  {self._pageNumber} de {page_count}"        
+        )
 
 
 # Creacion del PDF
@@ -427,7 +433,7 @@ def exportar_pdf(request):
         canvas.drawRightString(A4[1] - 0.4 * cm, A4[0] - 1.4 * cm, "Datos por Ubicación")
         canvas.setFont("Helvetica", 8)
         fecha_str = datetime.now().strftime('%d/%m/%Y')
-        canvas.drawRightString(A4[1] - 0.4 * cm, A4[0] - 2.1 * cm, f"Emitido : {fecha_str}")
+        canvas.drawRightString(A4[1] - 0.45 * cm, A4[0] - 2.1 * cm, f"Emitido :   {fecha_str}")
         canvas.restoreState()
 
     # Usar NumberedCanvas para total de páginas
