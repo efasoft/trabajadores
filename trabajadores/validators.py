@@ -4,7 +4,6 @@ from datetime import date
 import re
 from django.core.exceptions import ValidationError
 
-
 class TrabajadorModel(BaseModel):
     nombres: str
     apellidos: str
@@ -18,15 +17,18 @@ class TrabajadorModel(BaseModel):
     password: str
     foto: Any  # <-- CAMBIO HECHO AQUÍ
     activo: bool = True
+    provincia: Any   # Nuevo campo
+    ciudad: Any      # Nuevo campo
+    codigo_postal: str  # Nuevo campo    
 
     # --- Nombres / Apellidos ---
-    @field_validator('nombres', 'apellidos')
+    @field_validator('nombres')
     def nombre_max_length(cls, v):
         if len(v) > 60:
             raise ValueError('Máximo 60 caracteres')
         return v
 
-    @field_validator('nombres', 'apellidos')
+    @field_validator('apellidos')
     def nombre_vacio_length(cls, v):
         if not v:
             raise ValueError('Este campo no puede quedar vacío')
@@ -86,12 +88,69 @@ class TrabajadorModel(BaseModel):
             raise ValueError('Formato de imagen inválido (JPG o PNG requeridos)')
         return v
 
+    # --- Provincia ---
+    @field_validator('provincia')
+    def validar_provincia(cls, v):
+        if not v:
+            raise ValueError("Debe seleccionar una provincia")
+        return v
+
+    # --- Ciudad ---
+    @field_validator('ciudad')
+    def validar_ciudad(cls, v):
+        if not v:
+            raise ValueError("Debe seleccionar una ciudad")
+        return v
+
+    # --- Código Postal ---
+    @field_validator('codigo_postal')
+    def validar_codigo_postal(cls, v):
+        if not re.match(r'^[0-9]{4,10}$', v):
+            raise ValueError("Código Postal inválido (solo números, entre 4 y 10 dígitos)")
+        return v    
+
     # --- Sueldo Bruto Validado ---
     @model_validator(mode="after")
     def calcular_sueldo_bruto(self):
         if (self.sueldo_base + self.comision) <= 0:
             raise ValueError("El sueldo bruto debe ser mayor que cero")
         return self
+    
+# =========================
+#   Provincia Model
+# =========================
+class ProvinciaModel(BaseModel):
+    nombre: str
+
+    @field_validator("nombre")
+    def nombre_valido(cls, v):
+        if len(v) > 60:
+            raise ValueError("Máximo 60 caracteres")
+        if not v.strip():
+            raise ValueError("El nombre no puede estar vacío")
+        if not v.replace(" ", "").isalpha():
+            raise ValueError("El nombre solo debe contener letras")
+        return v
+
+
+# =========================
+#   Ciudad Model
+# =========================
+class CiudadModel(BaseModel):
+    nombre: str
+    provincia: int  # Puede ser un ID de Provincia
+
+    @field_validator("nombre")
+    def nombre_valido(cls, v):
+        if len(v) > 60:
+            raise ValueError("Máximo 60 caracteres")
+        if not v.strip():
+            raise ValueError("El nombre no puede estar vacío")
+        if not v.replace(" ", "").isalpha():
+            raise ValueError("El nombre solo debe contener letras")
+        return v
+
+
 
 # Validadores auxiliares (para forms.py clásicos)
 def validar_telefono(value):

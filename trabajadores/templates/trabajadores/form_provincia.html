@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body px-5 py-4">
+          <h4 class="text-center mb-4">
+            <i class="fa fa-map-marker-alt me-2"></i>{{ accion }} Provincia
+          </h4>
+
+          <form method="POST" id="provinciaForm">
+            {% csrf_token %}
+            <div class="row g-4">
+              <!-- Nombre -->
+              <div class="col-md-12">
+                <label for="id_nombre" class="form-label">Nombre de la Provincia</label>
+                <input type="text" name="nombre" id="id_nombre"
+                       value="{{ form.nombre.value|default_if_none:'' }}"
+                       class="form-control" required>
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-between mt-4">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fa fa-save me-1"></i>{{ accion }}
+              </button>
+              <a href="{% url 'trabajadores:listar_provincias' %}" class="btn btn-dark px-4">
+                <i class="fa fa-times me-1"></i>Cancelar
+              </a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEETALERT2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- AJAX submit usando Fetch -->
+<script>
+document.getElementById('provinciaForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+  const url = form.action || window.location.pathname;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: data.message,
+        confirmButtonColor: '#28a745'
+      }).then(() => {
+        window.location.href = "{% url 'trabajadores:listar_provincias' %}";
+      });
+    } else {
+      let html = '';
+      data.errors.forEach(err => { html += `<div>• ${err}</div>`; });
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Errores de validación',
+        html: html,
+        confirmButtonColor: '#e74c3c'
+      });
+    }
+
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error del servidor',
+      text: 'Ocurrió un error inesperado. Intenta nuevamente.'
+    });
+  }
+});
+</script>
+
+<style>
+.card {
+  border: none;
+  border-radius: 1rem;
+}
+.form-label {
+  font-weight: 600;
+}
+.btn-primary {
+  background: linear-gradient(to right, #36d1dc, #5b86e5);
+  border: none;
+}
+.btn-dark {
+  background: linear-gradient(to right, #232526, #414345);
+  border: none;
+}
+</style>
+{% endblock %}

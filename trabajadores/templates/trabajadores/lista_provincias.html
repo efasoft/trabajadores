@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Provincias{% endblock %}
+
+{% block content %}
+<style>
+.page-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 1rem; }
+.card-provincia {
+  display: flex; padding: 0.6rem 1rem;
+  background: white; border-left: 4px solid #17a2b8;
+  margin-bottom: 0.5rem; border-radius: 0.4rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-provincia:hover { background: #f7f7f7; }
+.col-nombre { flex: 1; }
+.acciones { display: flex; gap: 0.6rem; }
+.fa-edit { color: #17a2b8; cursor:pointer; }
+.fa-trash { color: #dc3545; cursor:pointer; }
+</style>
+
+<div class="card p-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <h3 class="page-title">Relación de Provincias</h3>
+    <a href="{% url 'trabajadores:crear_provincia' %}" class="icon-btn" data-bs-toggle="tooltip" title="Agregar nuevo provincia">
+      <i class="fas fa-map-marked-alt fa-2x text-success mb-3"></i> 
+    </a>
+
+  </div>
+
+  <input type="text" id="searchInput" class="form-control my-3" placeholder="Buscar por nombre...">
+
+  <div class="header-row fw-bold mb-2">Nombre</div>
+
+  <div id="provinciasContainer">
+    {% for p in provincias %}
+    <div class="card-provincia" data-nombre="{{ p.nombre|lower }}">
+      <div class="col-nombre">{{ p.nombre }}</div>
+      <div class="acciones ms-auto">
+        <a href="{% url 'trabajadores:editar_provincia' p.id %}" title="Editar"><i class="fas fa-edit"></i></a>
+        <i class="fas fa-trash" onclick="confirmDel({{ p.id }})" title="Eliminar"></i>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-2 text-muted small">
+    Total registros: <span id="totalRegistros">{{ provincias|length }}</span>
+  </div>
+</div>
+
+<script>
+function confirmDel(id) {
+  Swal.fire({
+    title:'¿Eliminar provincia?',
+    text:'Esta acción no se puede deshacer',
+    icon:'warning',
+    showCancelButton:true,
+    confirmButtonText:'Sí, eliminar',
+    cancelButtonText:'Cancelar'
+  }).then(r => { if (r.isConfirmed) window.location.href = '/provincias/eliminar/' + id + '/'; });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  const container = document.getElementById("provinciasContainer");
+  const totalRegistros = document.getElementById("totalRegistros");
+  const elementos = Array.from(container.children);
+
+  function actualizarVista() {
+    const query = searchInput.value.toLowerCase();
+    let visibles = 0;
+    elementos.forEach(el => {
+      if (el.dataset.nombre.includes(query)) { el.style.display = "flex"; visibles++; }
+      else { el.style.display = "none"; }
+    });
+    totalRegistros.textContent = visibles;
+  }
+
+  searchInput.addEventListener("input", actualizarVista);
+});
+</script>
+{% endblock %}
+
+
+

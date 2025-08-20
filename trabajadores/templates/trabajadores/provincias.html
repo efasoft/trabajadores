@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Gestión de Provincias</h3>
+<form id="formProvincia">
+  <input type="text" name="nombre" placeholder="Nueva provincia" required>
+  <button type="submit">Agregar</button>
+</form>
+<ul>
+  {% for p in provincias %}
+    <li>{{ p.nombre }}
+      <button onclick="eliminarProvincia({{p.id}})">❌</button>
+    </li>
+  {% endfor %}
+</ul>
+
+<script>
+document.getElementById("formProvincia").addEventListener("submit", e=>{
+  e.preventDefault();
+  fetch("{% url 'trabajadores:crear_provincia' %}",{
+    method:"POST",body:new FormData(e.target),
+    headers:{"X-CSRFToken":"{{csrf_token}}"}
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      Swal.fire("Éxito",d.message,"success").then(()=>location.reload());
+    }else{
+      Swal.fire("Error",d.error,"error");
+    }
+  });
+});
+
+function eliminarProvincia(id){
+  Swal.fire({title:"¿Eliminar?",showCancelButton:true}).then(res=>{
+    if(res.isConfirmed){
+      fetch(`/provincias/eliminar/${id}/`).then(r=>r.json()).then(d=>{
+        Swal.fire("OK",d.message,"success").then(()=>location.reload());
+      });
+    }
+  });
+}
+</script>
+{% endblock %}

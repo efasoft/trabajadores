@@ -24,7 +24,7 @@
               <!-- Apellidos -->
               <div class="col-md-6">
                 <label for="id_apellidos" class="form-label">Apellidos</label>
-                <input type="text" name="apellidos" id="id_apellidos" value="{{ form.apellidos.value|default_if_none:'' }}" class="form-control" required>
+                <input type="text" name="apellidos" id="id_apellidos" value="{{ form.apellidos.value|default_if_none:'' }}" class="form-control" >
               </div>
 
               <!-- Email -->
@@ -35,15 +35,15 @@
 
               <!-- Fecha -->
               <div class="col-md-6 mb-3">
-               <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
-               <input 
-                  type="text" 
-                  id="id_fecha" 
-                  name="fecha" 
-                  class="form-control datepicker" 
-                  placeholder="DD/MM/AAAA" 
-                  value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}">
-              </div>
+                <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
+                <input 
+                   type="text" 
+                   id="id_fecha" 
+                   name="fecha" 
+                   class="form-control datepicker" 
+                   placeholder="DD/MM/AAAA" 
+                   value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}">
+               </div>
 
               <!-- Edad -->
               <div class="col-md-6">
@@ -61,6 +61,41 @@
                 <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
                 <input type="text" name="telefono_movil" id="id_telefono_movil" value="{{ form.telefono_movil.value|default_if_none:'' }}" class="form-control">
               </div>
+
+              <!-- Provincia -->
+              <div class="col-md-6">
+                <label for="id_provincia" class="form-label">Provincia</label>
+                <select name="provincia" id="id_provincia" class="form-select" required>
+                  <option value="">Seleccione una provincia</option>
+                  {% for p in provincias %}
+                    <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>
+                      {{ p.nombre }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Ciudad -->
+              <div class="col-md-6">
+                <label for="id_ciudad" class="form-label">Ciudad</label>
+                <select name="ciudad" id="id_ciudad" class="form-select" required>
+                  <option value="">Seleccione una ciudad</option>
+                  {% if ciudades %}
+                    {% for c in ciudades %}
+                      <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}"
+                        {% if form.ciudad.value == c.id %}selected{% endif %}>
+                        {{ c.nombre }}
+                      </option>
+                    {% endfor %}
+                  {% endif %}
+                </select>
+              </div>      
+
+              <!-- Código Postal (NUEVO CAMPO) -->
+              <div class="col-md-6">
+                <label for="id_codigo_postal" class="form-label">Código Postal</label>
+                <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control" required>
+              </div>                         
 
               <!-- Sueldo Base y Comisión -->
               <div class="col-md-6">
@@ -144,7 +179,8 @@
       flatpickr(".datepicker", {
         dateFormat: "d/m/Y",
         locale: "es",
-        allowInput: true
+        allowInput: true,
+        position: "above"   // 📌 Se asegura que se muestre justo sobre el input
       });
     } else {
       console.error("Flatpickr no está disponible.");
@@ -243,6 +279,28 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
   }
 });
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const provinciaSelect = document.getElementById("id_provincia");
+    const ciudadSelect = document.getElementById("id_ciudad");
+  
+    function filtrarCiudades() {
+      const provinciaId = provinciaSelect.value;
+      for (let option of ciudadSelect.options) {
+        if (!option.value) continue; // saltar "Seleccione"
+        option.style.display = option.getAttribute("data-provincia") === provinciaId ? "block" : "none";
+      }
+      ciudadSelect.value = ""; // reset ciudad
+    }
+  
+    provinciaSelect.addEventListener("change", filtrarCiudades);
+  
+    // Ejecutar al cargar, para edición de trabajador
+    filtrarCiudades();
+  });
+  </script>
+  
 
 <style>
 .card {

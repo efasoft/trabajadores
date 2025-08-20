@@ -19,11 +19,19 @@
   .stat:last-child { border-bottom: none; }
   .stat-label { font-weight: 600; }
   .stat-value { font-size: 1.2rem; color: #007bff; }
+
+  .menu-cards .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .menu-cards .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
 </style>
 
 <div class="container">
   <h2 class="text-white text-center mb-5">Dashboard de Trabajadores</h2>
-  <div class="row g-4">
+  <div class="row g-4 mb-5">
       <div class="col-md-3">
           <div class="card text-white bg-primary shadow h-100">
               <div class="card-body text-center">
@@ -57,6 +65,45 @@
           </div>
       </div>
   </div>
+
+  <!-- Menú de accesos rápidos -->
+  <h3 class="text-white text-center mb-4">Gestión Rápida</h3>
+  <div class="row g-4 menu-cards">
+    <div class="col-md-4">
+      <a href="{% url 'trabajadores:listar' %}" class="text-decoration-none">
+        <div class="card shadow text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-users fa-3x text-primary mb-3"></i>
+            <h5 class="card-title">Trabajadores</h5>
+            <p class="text-muted">Ver y gestionar trabajadores</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'trabajadores:listar_provincias' %}" class="text-decoration-none">
+        <div class="card shadow text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-map-marked-alt fa-3x text-success mb-3"></i>
+            <h5 class="card-title">Provincias</h5>
+            <p class="text-muted">Ver y gestionar provincias</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'trabajadores:listar_ciudades' %}" class="text-decoration-none">
+        <div class="card shadow text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-city fa-3x text-danger mb-3"></i>
+            <h5 class="card-title">Ciudades</h5>
+            <p class="text-muted">Ver y gestionar ciudades</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}
+
 

@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings  # <-- ESTA ES LA CLAVE
 from django.contrib.auth.decorators import login_required
-from .models import Trabajador
-from .forms import TrabajadorForm
-from .validators import TrabajadorModel
+from .models import Trabajador, Provincia, Ciudad   # <-- agregado Provincia y Ciudad
+from .forms import TrabajadorForm,CiudadForm, ProvinciaForm
+from .validators import TrabajadorModel, ProvinciaModel, CiudadModel
 from datetime import datetime
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
@@ -42,7 +42,6 @@ def home(request):
         'promedio': promedio
     }
     return render(request, 'trabajadores/home.html', context)
-
 
 @login_required
 def crear_trabajador(request):
@@ -83,7 +82,13 @@ def crear_trabajador(request):
         })
 
     form = TrabajadorForm()
-    return render(request, 'trabajadores/form.html', {'form': form, 'accion': 'Crear'})
+    return render(request, 'trabajadores/form.html', {
+        'form': form,
+        'accion': 'Crear',
+        'provincias': Provincia.objects.all(),   # <-- agregado
+        'ciudades': Ciudad.objects.all()         # <-- agregado
+    })
+
 
 
 @login_required
@@ -132,7 +137,9 @@ def editar_trabajador(request, trabajador_id):
     return render(request, 'trabajadores/form.html', {
         'form': form,
         'accion': 'Editar',
-        'trabajador': trabajador
+        'trabajador': trabajador,
+        'provincias': Provincia.objects.all(),   # <-- agregado
+        'ciudades': Ciudad.objects.all()         # <-- agregado
     })
 
 
@@ -448,4 +455,92 @@ def exportar_pdf(request):
     else:
         response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
+
+# -----------------------
+#  PROVINCIAS
+# -----------------------
+@login_required
+def listar_provincias(request):
+    provincias = Provincia.objects.all().order_by("nombre")
+    return render(request, "trabajadores/lista_provincias.html", {"provincias": provincias})
+
+@login_required
+def crear_provincia(request):
+    if request.method == "POST":
+        form = ProvinciaForm(request.POST)
+        if form.is_valid():
+            provincia = form.save()
+            return JsonResponse({"success": True, "message": "Provincia creada con éxito"})
+        else:
+            return JsonResponse({"success": False, "errors": form.errors.get_json_data(escape_html=True)})
+    else:
+        form = ProvinciaForm()
+    return render(request, "trabajadores/form_provincia.html", {"form": form, "accion": "Crear"})
+
+
+@login_required
+def editar_provincia(request, id):
+    provincia = get_object_or_404(Provincia, id=id)
+    if request.method == "POST":
+        form = ProvinciaForm(request.POST, instance=provincia)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"success": True, "message": "Provincia actualizada con éxito"})
+        else:
+            return JsonResponse({"success": False, "errors": form.errors.get_json_data(escape_html=True)})
+    else:
+        form = ProvinciaForm(instance=provincia)
+    return render(request, "trabajadores/form_provincia.html", {"form": form, "accion": "Editar"})
+
+
+@login_required
+def eliminar_provincia(request, id):
+    provincia = get_object_or_404(Provincia, id=id)
+    provincia.delete()
+    return redirect("trabajadores:listar_provincias")
+
+
+# -----------------------
+#  CIUDADES
+# -----------------------
+@login_required
+def listar_ciudades(request):
+    ciudades = Ciudad.objects.select_related("provincia").all().order_by("nombre")
+    return render(request, "trabajadores/lista_ciudades.html", {"ciudades": ciudades})
+
+@login_required
+def crear_ciudad(request):
+    if request.method == "POST":
+        form = CiudadForm(request.POST)
+        if form.is_valid():
+            ciudad = form.save()
+            return JsonResponse({"success": True, "message": "Ciudad creada con éxito"})
+        else:
+            return JsonResponse({"success": False, "errors": form.errors.get_json_data(escape_html=True)})
+    else:
+        form = CiudadForm()
+    provincias = Provincia.objects.all()
+    return render(request, "trabajadores/form_ciudad.html", {"form": form, "accion": "Crear", "provincias": provincias})
+
+@login_required
+def editar_ciudad(request, id):
+    ciudad = get_object_or_404(Ciudad, id=id)
+    if request.method == "POST":
+        form = CiudadForm(request.POST, instance=ciudad)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"success": True, "message": "Ciudad actualizada con éxito"})
+        else:
+            return JsonResponse({"success": False, "errors": form.errors.get_json_data(escape_html=True)})
+    else:
+        form = CiudadForm(instance=ciudad)
+    provincias = Provincia.objects.all()
+    return render(request, "trabajadores/form_ciudad.html", {"form": form, "accion": "Editar", "provincias": provincias})
+
+
+def eliminar_ciudad(request, id):
+    ciudad = get_object_or_404(Ciudad, id=id)
+    ciudad.delete()
+    return redirect("trabajadores:listar_ciudades")
+
 

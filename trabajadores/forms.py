@@ -1,5 +1,6 @@
 from django import forms
-from .models import Trabajador
+from .models import Trabajador, Provincia, Ciudad
+from .validators import ProvinciaModel, CiudadModel
 
 ' Esto hace que se tome las vallidacione de validators.py'
 from .validators import TrabajadorModel
@@ -16,9 +17,45 @@ class TrabajadorForm(forms.ModelForm):
         })
     )
 
+    provincia = forms.ModelChoiceField(
+        queryset=Provincia.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True,
+        label="Provincia"
+    )
+
+    ciudad = forms.ModelChoiceField(
+        queryset=Ciudad.objects.none(),  # Inicialmente vacío, se carga vía JS
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True,
+        label="Ciudad"
+    )
+
+    codigo_postal = forms.CharField(
+        max_length=10,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 28001'}),
+        required=True,
+        label="Código Postal"
+    )    
+
     class Meta:
         model = Trabajador
         exclude = ['sueldo_bruto']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Si el trabajador ya tiene provincia seleccionada, cargar ciudades filtradas
+        if 'provincia' in self.data:
+            try:
+                provincia_id = int(self.data.get('provincia'))
+                self.fields['ciudad'].queryset = Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
+            except (ValueError, TypeError):
+                self.fields['ciudad'].queryset = Ciudad.objects.none()
+        elif self.instance.pk and self.instance.provincia:
+            self.fields['ciudad'].queryset = Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
+
+
 
     def clean(self):
         cleaned_data = super().clean()
@@ -38,6 +75,7 @@ class TrabajadorForm(forms.ModelForm):
                 "password": cleaned_data.get("password"),
                 "foto": cleaned_data.get("foto"),
                 "activo": cleaned_data.get("activo"),
+                "codigo_postal": cleaned_data.get("codigo_postal"),                
             })
 
             # Calcula sueldo bruto automáticamente
@@ -52,66 +90,16 @@ class TrabajadorForm(forms.ModelForm):
         return cleaned_data
 
 
-"""
-from django import forms
-from .models import Trabajador
-from .validators import TrabajadorModel
-from pydantic import ValidationError
-from django.forms.widgets import DateInput
-
-class TrabajadorForm(forms.ModelForm):
+class ProvinciaForm(forms.ModelForm):
     class Meta:
-        model = Trabajador
-        fields = [
-            'nombres', 'apellidos', 'edad', 'fecha', 'email',
-            'telefono_casa', 'telefono_movil', 'sueldo_base',
-            'comision', 'password', 'foto', 'activo'
-        ]
-        widgets = {
-'fecha' : forms.DateField(
-    label="Fecha de ingreso",
-    widget=DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-    input_formats=['%Y-%m-%d'],
-    required=True
-),
-            'password': forms.PasswordInput(render_value=True),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        # Capturar la ruta del archivo si está disponible
-        foto = cleaned_data.get('foto')
-        foto_value = foto.name if foto else None
-        cleaned_data['foto'] = foto_value
-
-        try:
-            TrabajadorModel(**cleaned_data)
-        except ValidationError as e:
-            for error in e.errors():
-                loc = error.get('loc', [])
-                field = loc[0] if loc else '__all__'
-                message = str(error['msg']).replace("Value error,", "").strip()
-                self.add_error(field, message)
-        return cleaned_data
-
-"""
-''' 
+        model = Provincia
+        fields = ['nombre']
 
 
-except ValidationError as e:
-    for error in e.errors():
-        mensaje = str(error['msg']).replace("Value error,", "").strip()
-        messages.error(request, mensaje)
-
-        return cleaned_data
-
-    def get_errores(self):
-        """Retorna errores de Pydantic si los hay."""
-        return getattr(self, '_pydantic_errors', [])
-
-'''
-
+class CiudadForm(forms.ModelForm):
+    class Meta:
+        model = Ciudad
+        fields = ['nombre', 'provincia']
 
 
 

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Gestión de Ciudades</h3>
+<form id="formCiudad">
+  <input type="text" name="nombre" placeholder="Nueva ciudad" required>
+  <select name="provincia">
+    {% for p in provincias %}
+      <option value="{{p.id}}">{{p.nombre}}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Agregar</button>
+</form>
+<ul>
+  {% for c in ciudades %}
+    <li>{{ c.nombre }} ({{ c.provincia.nombre }})
+      <button onclick="eliminarCiudad({{c.id}})">❌</button>
+    </li>
+  {% endfor %}
+</ul>
+
+<script>
+document.getElementById("formCiudad").addEventListener("submit", e=>{
+  e.preventDefault();
+  fetch("{% url 'trabajadores:crear_ciudad' %}",{
+    method:"POST",body:new FormData(e.target),
+    headers:{"X-CSRFToken":"{{csrf_token}}"}
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      Swal.fire("Éxito",d.message,"success").then(()=>location.reload());
+    }else{
+      Swal.fire("Error",d.error,"error");
+    }
+  });
+});
+
+function eliminarCiudad(id){
+  Swal.fire({title:"¿Eliminar?",showCancelButton:true}).then(res=>{
+    if(res.isConfirmed){
+      fetch(`/ciudades/eliminar/${id}/`).then(r=>r.json()).then(d=>{
+        Swal.fire("OK",d.message,"success").then(()=>location.reload());
+      });
+    }
+  });
+}
+</script>
+{% endblock %}
