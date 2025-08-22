@@ -21,22 +21,34 @@ class TrabajadorModel(BaseModel):
     ciudad: Any      # Nuevo campo
     codigo_postal: str  # Nuevo campo    
 
-    # --- Nombres / Apellidos ---
+
+    # --- Nombres ---
     @field_validator('nombres')
-    def nombre_max_length(cls, v):
+    def validar_nombres(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Debe ingresar un nombre")
         if len(v) > 60:
-            raise ValueError('Máximo 60 caracteres')
+            raise ValueError("El nombre no puede superar 60 caracteres")
+        if not v.replace(" ", "").isalpha():
+            raise ValueError("El nombre solo debe contener letras")
         return v
 
+    # --- Apellidos ---
     @field_validator('apellidos')
-    def nombre_vacio_length(cls, v):
-        if not v:
-            raise ValueError('Este campo no puede quedar vacío')
-        return v
+    def validar_apellidos(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Debe ingresar un apellido")
+        if len(v) > 60:
+            raise ValueError("El apellido no puede superar 60 caracteres")
+        if not v.replace(" ", "").isalpha():
+            raise ValueError("El apellido solo debe contener letras")
+        return v     
 
     # --- Edad ---
     @field_validator('edad')
     def edad_valida(cls, v):
+        if not v:
+            raise ValueError('Debe ingresar la edad')          
         if not (18 <= v <= 100):
             raise ValueError('Edad debe estar entre 18 y 100')
         return v
@@ -157,8 +169,7 @@ def validar_telefono(value):
     if not value.isdigit() or len(value) < 7:
         raise ValidationError("El número telefónico debe contener al menos 7 dígitos numéricos.")
 
-def validar_nombre(value):
-    if not value.replace(" ", "").isalpha():
-        raise ValidationError("El nombre solo debe contener letras.")
+  
+
 
 

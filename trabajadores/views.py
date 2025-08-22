@@ -9,7 +9,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
-
+from pydantic import ValidationError as PydanticValidationError  # <-- agregado
 import csv
 
 from reportlab.pdfgen import canvas
@@ -76,19 +76,19 @@ def crear_trabajador(request):
                 'message': 'Trabajador creado correctamente.'
             })
 
+        # 🔥 Ajustado: errores del form en castellano
         return JsonResponse({
             'success': False,
-            'errors': [error for field in form for error in field.errors]
+            'errors': [f"{field.label}: {error}" for field in form for error in field.errors]
         })
 
     form = TrabajadorForm()
     return render(request, 'trabajadores/form.html', {
         'form': form,
         'accion': 'Crear',
-        'provincias': Provincia.objects.all(),   # <-- agregado
-        'ciudades': Ciudad.objects.all()         # <-- agregado
+        'provincias': Provincia.objects.all(),
+        'ciudades': Ciudad.objects.all()
     })
-
 
 
 @login_required
@@ -128,9 +128,10 @@ def editar_trabajador(request, trabajador_id):
                 'message': 'Trabajador actualizado correctamente.'
             })
 
+        # 🔥 Ajustado: errores del form en castellano
         return JsonResponse({
             'success': False,
-            'errors': [error for field in form for error in field.errors]
+            'errors': [f"{field.label}: {error}" for field in form for error in field.errors]
         })
 
     form = TrabajadorForm(instance=trabajador)
@@ -138,8 +139,8 @@ def editar_trabajador(request, trabajador_id):
         'form': form,
         'accion': 'Editar',
         'trabajador': trabajador,
-        'provincias': Provincia.objects.all(),   # <-- agregado
-        'ciudades': Ciudad.objects.all()         # <-- agregado
+        'provincias': Provincia.objects.all(),
+        'ciudades': Ciudad.objects.all()
     })
 
 

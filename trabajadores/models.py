@@ -23,19 +23,19 @@ class Trabajador(models.Model):
     apellidos = models.CharField(max_length=100)
     email = models.EmailField()
     telefono_movil = models.CharField(max_length=15)
-    telefono_casa = models.CharField(max_length=15, blank=True, null=True)
+    telefono_casa = models.CharField(max_length=15)  # <-- obligatorio ahora
     edad = models.PositiveIntegerField()
     sueldo_base = models.DecimalField(max_digits=10, decimal_places=2)
     comision = models.DecimalField(max_digits=10, decimal_places=2)
     fecha = models.DateField()
     activo = models.BooleanField(default=True)
-    foto = models.ImageField(upload_to='fotos_trabajadores/', blank=True, null=True)
+    foto = models.ImageField(upload_to='fotos_trabajadores/')  # <-- obligatorio ahora
     password = models.CharField(max_length=128)
 
     # NUEVOS CAMPOS
-    provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, blank=True)
-    ciudad = models.ForeignKey(Ciudad, on_delete=models.SET_NULL, null=True, blank=True)
-    codigo_postal = models.CharField(max_length=10, blank=True, null=True)
+    provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
+    ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT)
+    codigo_postal = models.CharField(max_length=10)  # <-- obligatorio
 
     @property
     def sueldo_bruto(self):
@@ -43,3 +43,4 @@ class Trabajador(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+

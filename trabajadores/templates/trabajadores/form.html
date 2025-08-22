@@ -18,7 +18,7 @@
               <!-- Nombres -->
               <div class="col-md-6">
                 <label for="id_nombres" class="form-label">Nombres</label>
-                <input type="text" name="nombres" id="id_nombres" value="{{ form.nombres.value|default_if_none:'' }}" class="form-control" required>
+                <input type="text" name="nombres" id="id_nombres" value="{{ form.nombres.value|default_if_none:'' }}" class="form-control">
               </div>
 
               <!-- Apellidos -->
@@ -30,7 +30,7 @@
               <!-- Email -->
               <div class="col-md-6">
                 <label for="id_email" class="form-label">Correo Electrónico</label>
-                <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control" required>
+                <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control">
               </div>
 
               <!-- Fecha -->
@@ -48,7 +48,7 @@
               <!-- Edad -->
               <div class="col-md-6">
                 <label for="id_edad" class="form-label">Edad</label>
-                <input type="number" name="edad" id="id_edad" value="{{ form.edad.value|default_if_none:'' }}" class="form-control" required>
+                <input type="number" name="edad" id="id_edad" value="{{ form.edad.value|default_if_none:'' }}" class="form-control">
               </div>
 
               <!-- Teléfonos -->
@@ -65,7 +65,7 @@
               <!-- Provincia -->
               <div class="col-md-6">
                 <label for="id_provincia" class="form-label">Provincia</label>
-                <select name="provincia" id="id_provincia" class="form-select" required>
+                <select name="provincia" id="id_provincia" class="form-select">
                   <option value="">Seleccione una provincia</option>
                   {% for p in provincias %}
                     <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>
@@ -78,7 +78,7 @@
               <!-- Ciudad -->
               <div class="col-md-6">
                 <label for="id_ciudad" class="form-label">Ciudad</label>
-                <select name="ciudad" id="id_ciudad" class="form-select" required>
+                <select name="ciudad" id="id_ciudad" class="form-select">
                   <option value="">Seleccione una ciudad</option>
                   {% if ciudades %}
                     {% for c in ciudades %}
@@ -94,7 +94,7 @@
               <!-- Código Postal (NUEVO CAMPO) -->
               <div class="col-md-6">
                 <label for="id_codigo_postal" class="form-label">Código Postal</label>
-                <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control" required>
+                <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control">
               </div>                         
 
               <!-- Sueldo Base y Comisión -->

@@ -14,38 +14,60 @@ class TrabajadorForm(forms.ModelForm):
             'class': 'form-control datepicker',
             'placeholder': 'DD/MM/AAAA',
             'autocomplete': 'off'
-        })
+        }),
+        error_messages={
+            "required": "Debe ingresar una fecha",
+            "invalid": "Formato de fecha inválido. Use DD/MM/AAAA"
+        }
     )
 
     provincia = forms.ModelChoiceField(
         queryset=Provincia.objects.all(),
         widget=forms.Select(attrs={'class': 'form-select'}),
         required=True,
-        label="Provincia"
+        label="Provincia",
+        error_messages={
+            "required": "Debe seleccionar una provincia"
+        }
     )
 
     ciudad = forms.ModelChoiceField(
-        queryset=Ciudad.objects.none(),  # Inicialmente vacío, se carga vía JS
+        queryset=Ciudad.objects.none(),
         widget=forms.Select(attrs={'class': 'form-select'}),
         required=True,
-        label="Ciudad"
+        label="Ciudad",
+        error_messages={
+            "required": "Debe seleccionar una ciudad"
+        }
     )
 
     codigo_postal = forms.CharField(
         max_length=10,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 28001'}),
         required=True,
-        label="Código Postal"
+        label="Código Postal",
+        error_messages={
+            "required": "Debe ingresar un código postal"
+        }
     )    
 
     class Meta:
         model = Trabajador
         exclude = ['sueldo_bruto']
+        error_messages = {
+            "nombres": {"required": "Debe ingresar un nombre"},
+            "apellidos": {"required": "Atencion: Debe ingresar un apellido"},
+            "email": {"required": "Debe ingresar un correo electrónico", "invalid": "Correo electrónico inválido"},
+            "telefono_movil": {"required": "Debe ingresar un teléfono móvil"},
+            "edad": {"required": "Debe ingresar la edad", "invalid": "La edad debe ser un número"},
+            "sueldo_base": {"required": "Debe ingresar el sueldo base"},
+            "comision": {"required": "Debe ingresar la comisión"},
+            "password": {"required": "Debe ingresar una contraseña"},
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Si el trabajador ya tiene provincia seleccionada, cargar ciudades filtradas
         if 'provincia' in self.data:
             try:
                 provincia_id = int(self.data.get('provincia'))
@@ -55,13 +77,10 @@ class TrabajadorForm(forms.ModelForm):
         elif self.instance.pk and self.instance.provincia:
             self.fields['ciudad'].queryset = Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
 
-
-
     def clean(self):
         cleaned_data = super().clean()
 
         try:
-            # Validación con Pydantic
             validated = TrabajadorModel(**{
                 "nombres": cleaned_data.get("nombres"),
                 "apellidos": cleaned_data.get("apellidos"),
@@ -75,10 +94,9 @@ class TrabajadorForm(forms.ModelForm):
                 "password": cleaned_data.get("password"),
                 "foto": cleaned_data.get("foto"),
                 "activo": cleaned_data.get("activo"),
-                "codigo_postal": cleaned_data.get("codigo_postal"),                
+                "codigo_postal": cleaned_data.get("codigo_postal"),
             })
 
-            # Calcula sueldo bruto automáticamente
             cleaned_data["sueldo_bruto"] = validated.sueldo_base + validated.comision
 
         except PydanticValidationError as e:
@@ -94,12 +112,21 @@ class ProvinciaForm(forms.ModelForm):
     class Meta:
         model = Provincia
         fields = ['nombre']
+        error_messages = {
+            "nombre": {"required": "Debe ingresar un nombre de provincia"}
+        }
 
 
 class CiudadForm(forms.ModelForm):
     class Meta:
         model = Ciudad
         fields = ['nombre', 'provincia']
+        error_messages = {
+            "nombre": {"required": "Debe ingresar un nombre de ciudad"},
+            "provincia": {"required": "Debe seleccionar una provincia"}
+        }
+
+
 
 
 

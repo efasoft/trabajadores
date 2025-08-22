@@ -6,12 +6,13 @@ db_params = {
     'database': 'db_trabajadores_521',
     'user': 'postgres',
     'password': 'Espana21',
-    'port': '5432'    
+    'port': '5432'
 }
 
-# Nombre de la tabla y nombre de la columna del ID
+# Nombre de la tabla y columna ID
 table_name = 'trabajadores_trabajador'
 id_column = 'id'
+email_column = 'email'  # Nombre exacto de la columna en la tabla
 
 try:
     # Conexión a la base de datos
@@ -19,46 +20,64 @@ try:
     cur = conn.cursor()
 
     # Paso 1: Obtener el último registro
-    # Obtener el registro y el orden de las columnas de la tabla
     cur.execute(f"SELECT * FROM {table_name} ORDER BY {id_column} DESC LIMIT 1;")
     last_record = cur.fetchone()
-    
-    if last_record:
-        # Obtener los nombres de todas las columnas y su índice
+
+    if not last_record:
+        print("No se encontraron registros en la tabla.")
+    else:
+        # Obtener nombres de columnas
         column_names = [desc[0] for desc in cur.description]
-        
-        # Encontrar el índice de la columna ID
         id_index = column_names.index(id_column)
-        
-        # Paso 2: Preparar la inserción sin el ID
-        # Excluir la columna ID de la lista de columnas para el INSERT
+        email_index = column_names.index(email_column)
+
+        # Columnas a insertar (sin el ID)
         columns_to_insert = [col for col in column_names if col != id_column]
-        
-        # Crear la instrucción SQL de inserción
         placeholders = ', '.join(['%s'] * len(columns_to_insert))
         insert_query = f"INSERT INTO {table_name} ({', '.join(columns_to_insert)}) VALUES ({placeholders})"
-        
-        # Paso 3: Repetir la inserción 100 veces
-        for _ in range(10000):
-            # Crear una lista de valores para la inserción, excluyendo el ID
-            # Copiar la lista last_record y eliminar el valor en el índice del ID
+
+        # Extraer el email base
+        original_email = last_record[email_index].strip()
+        if '@' not in original_email:
+            raise ValueError("El email original no es válido.")
+
+        # Separar nombre y dominio para formato: nombre+num@dominio
+        name, domain = original_email.split('@', 1)
+
+        # Paso 2: Insertar 10,000 registros con emails únicos
+        for i in range(1, 10001):
+            # Crear lista de valores sin el ID
             values = list(last_record)
-            values.pop(id_index)
-            
+            values.pop(id_index)  # Remover el ID
+
+            # Modificar el email en la lista de valores
+            # Buscar el índice del email en la lista sin ID
+            email_idx_in_insert = columns_to_insert.index(email_column)
+            new_email = f"{name}+{i:05d}@{domain}"  # Formato: juan+00001@gmail.com
+            values[email_idx_in_insert] = new_email
+
+            # Ejecutar inserción
             cur.execute(insert_query, values)
 
-        # Confirmar los cambios
+        # Confirmar cambios
         conn.commit()
-        print("Registros duplicados insertados con éxito.")
+        print(f"✅ 10,000 registros insertados con emails únicos desde {new_email}.")
 
-    else:
-        print("No se encontraron registros en la tabla.")
+except psycopg2.UniqueViolation as e:
+    conn.rollback()
+    print("❌ Error: Violación de unicidad (posiblemente email duplicado). Detalles:", e)
 
-except psycopg2.Error as e:
-    print(f"Error al conectar o ejecutar la consulta: {e}")
+except psycopg2.IntegrityError as e:
+    conn.rollback()
+    print("❌ Error de integridad (constraint violation). Detalles:", e)
+
+except Exception as e:
+    conn.rollback()
+    print("❌ Error inesperado:", str(e))
 
 finally:
-    # Cerrar la conexión
-    if 'conn' in locals() and conn:
+    # Cerrar conexión
+    if 'cur' in locals():
         cur.close()
+    if 'conn' in locals() and conn:
         conn.close()

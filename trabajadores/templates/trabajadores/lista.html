@@ -4,6 +4,38 @@
 
 {% block content %}
 <style>
+
+/* Overlay Loader */
+#overlayLoader {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.spinner-border {
+  width: 4rem;
+  height: 4rem;
+  color: #17a2b8;
+}
+.progress {
+  width: 60%;
+  height: 8px;
+  margin-top: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.progress-bar {
+  background: linear-gradient(90deg, #17a2b8, #0072ff, #00c6ff);
+  width: 0%;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
 .page-title {
 display: flex;    
 border-radius: 0.4rem;    
@@ -153,6 +185,14 @@ border-radius: 10px;
 }
 
 </style>
+<!-- Overlay inicial -->
+<div id="overlayLoader">
+    <div class="spinner-border" role="status"></div>
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <span class="text-white mt-3">Cargando trabajadores...</span>
+</div>
 
 <div class="card">
 <div class="d-flex justify-content-between align-items-center">
@@ -201,10 +241,47 @@ border-radius: 10px;
 <div class="footer-container">
 <div class="pagination" id="paginacion"></div>
 <div class="footer-info">
-Total registros: <span id="totalRegistros">{{ trabajadores|length|intcomma }}</span>
+    {% if not request.GET.q %}
+      Total registros: <span id="totalRegistros">{{ total|intcomma }}</span>
+    {% else %}
+    Vamos: <span id="totalRegistros">{{ trabajadores|length|intcomma }}</span>
+    {% endif %}
+  </div>
 </div>
 </div>
-</div>
+
+<script>
+    /* === Overlay con progreso === */
+    document.addEventListener("DOMContentLoaded", function () {
+      const overlay = document.getElementById("overlayLoader");
+      const progressBar = document.getElementById("progressBar");
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress = Math.min(progress + 15, 100);
+        progressBar.style.width = progress + "%";
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => overlay.style.display = "none", 400);
+        }
+      }, 300);
+    });
+    
+    /* === Lazy Loading === */
+    const lazyItems = document.querySelectorAll('.lazy-item');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.visibility = 'visible';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { root: document.querySelector("#trabajadoresContainer"), threshold: 0.1 });
+    
+    lazyItems.forEach(el => {
+      el.style.visibility = "hidden";
+      observer.observe(el);
+    });
+</script>
 
 <script>
 function confirmDel(id) {
