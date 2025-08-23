@@ -4,7 +4,7 @@ from django.conf import settings  # <-- ESTA ES LA CLAVE
 from django.contrib.auth.decorators import login_required
 from .models import Trabajador, Provincia, Ciudad   # <-- agregado Provincia y Ciudad
 from .forms import TrabajadorForm,CiudadForm, ProvinciaForm
-from .validators import TrabajadorModel, ProvinciaModel, CiudadModel
+from .validators import TrabajadorModel
 from datetime import datetime
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
@@ -26,7 +26,6 @@ from django.contrib.auth.decorators import login_required
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
-
 @login_required
 def home(request):
     trabajadores = Trabajador.objects.all()
@@ -47,39 +46,23 @@ def home(request):
 def crear_trabajador(request):
     if request.method == 'POST':
         form = TrabajadorForm(request.POST, request.FILES)
-        if form.is_valid():
-            data = form.cleaned_data
-
-            # Extraer y convertir fecha
-            try:
-                fecha_str = request.POST.get('fecha')
-                data['fecha'] = datetime.strptime(fecha_str, "%d/%m/%Y").date()
-            except Exception:
-                return JsonResponse({
-                    'success': False,
-                    'errors': ['Formato de fecha inválido. Use DD/MM/AAAA.']
-                })
-
-            data['foto'] = request.FILES.get('foto')
-
-            try:
-                validated_data = TrabajadorModel(**data)
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'errors': [str(e).replace("Value error,", "").strip()]
-                })
-
-            Trabajador.objects.create(**validated_data.model_dump())
+        if not form.is_valid():
+            errors = []
+            for field in form:
+                for error in field.errors:
+                    if isinstance(error, str):
+                        errors.append(f"{field.label}: {error}")
+                    else:
+                        errors.append(f"{field.label}: {error}")
             return JsonResponse({
-                'success': True,
-                'message': 'Trabajador creado correctamente.'
+                'success': False,
+                'errors': errors
             })
-
-        # 🔥 Ajustado: errores del form en castellano
+        # Guardar si es válido
+        form.save()
         return JsonResponse({
-            'success': False,
-            'errors': [f"{field.label}: {error}" for field in form for error in field.errors]
+            'success': True,
+            'message': 'Trabajador creado correctamente.'
         })
 
     form = TrabajadorForm()
@@ -90,48 +73,28 @@ def crear_trabajador(request):
         'ciudades': Ciudad.objects.all()
     })
 
-
 @login_required
 def editar_trabajador(request, trabajador_id):
     trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
 
     if request.method == 'POST':
         form = TrabajadorForm(request.POST, request.FILES, instance=trabajador)
-        if form.is_valid():
-            data = form.cleaned_data
-
-            try:
-                fecha_str = request.POST.get('fecha')
-                data['fecha'] = datetime.strptime(fecha_str, "%d/%m/%Y").date()
-            except Exception:
-                return JsonResponse({
-                    'success': False,
-                    'errors': ['Formato de fecha inválido. Usa DD/MM/AAAA.']
-                })
-
-            data['foto'] = request.FILES.get('foto') or trabajador.foto
-
-            try:
-                validated_data = TrabajadorModel(**data)
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'errors': [str(e).replace("Value error,", "").strip()]
-                })
-
-            for attr, value in validated_data.model_dump().items():
-                setattr(trabajador, attr, value)
-            trabajador.save()
-
+        if not form.is_valid():
+            errors = []
+            for field in form:
+                for error in field.errors:
+                    if isinstance(error, str):
+                        errors.append(f"{field.label}: {error}")
+                    else:
+                        errors.append(f"{field.label}: {error}")
             return JsonResponse({
-                'success': True,
-                'message': 'Trabajador actualizado correctamente.'
+                'success': False,
+                'errors': errors
             })
-
-        # 🔥 Ajustado: errores del form en castellano
+        form.save()
         return JsonResponse({
-            'success': False,
-            'errors': [f"{field.label}: {error}" for field in form for error in field.errors]
+            'success': True,
+            'message': 'Trabajador actualizado correctamente.'
         })
 
     form = TrabajadorForm(instance=trabajador)
@@ -142,7 +105,6 @@ def editar_trabajador(request, trabajador_id):
         'provincias': Provincia.objects.all(),
         'ciudades': Ciudad.objects.all()
     })
-
 
 @login_required
 def listar_trabajadores(request):
