@@ -1,31 +1,39 @@
 # validators.py
-from pydantic import BaseModel, EmailStr, field_validator, model_validator
-from typing import Any
-from datetime import date
+from typing import Any, Optional
+from pydantic import BaseModel, field_validator, model_validator
 import re
 
 
 class TrabajadorModel(BaseModel):
+    """
+    Modelo Pydantic para validar los datos del formulario Trabajador.
+    Todos los campos deben cumplir con reglas específicas en español.
+    """
     model_config = {
         "extra": "forbid",
         "validate_assignment": True,
     }
 
+    # Campos obligatorios
     nombres: str
     apellidos: str
-    edad: int
-    fecha: str
-    email: EmailStr
-    telefono_casa: str
-    telefono_movil: str
-    sueldo_base: float
-    comision: float
-    password: str
-    foto: Any
+
+    # Campos opcionales (pueden ser None o cadena vacía)
+    edad: Optional[str] = None
+    fecha: Optional[str] = None
+    email: Optional[str] = None
+    telefono_casa: Optional[str] = None
+    telefono_movil: Optional[str] = None
+    sueldo_base: Optional[str] = None
+    comision: Optional[str] = None
+    password: Optional[str] = None
+    foto: Any  # Validado manualmente
     activo: bool = True
-    provincia: int
-    ciudad: int
-    codigo_postal: str
+    provincia: Optional[str] = None
+    ciudad: Optional[str] = None
+    codigo_postal: Optional[str] = None
+
+    # Validadores de campo
 
     @field_validator('nombres')
     def validar_nombres(cls, v):
@@ -35,7 +43,7 @@ class TrabajadorModel(BaseModel):
             raise ValueError("El nombre no puede superar 60 caracteres")
         if not v.replace(" ", "").isalpha():
             raise ValueError("El nombre solo debe contener letras")
-        return v
+        return v.strip()
 
     @field_validator('apellidos')
     def validar_apellidos(cls, v):
@@ -45,19 +53,20 @@ class TrabajadorModel(BaseModel):
             raise ValueError("El apellido no puede superar 60 caracteres")
         if not v.replace(" ", "").isalpha():
             raise ValueError("El apellido solo debe contener letras")
-        return v
+        return v.strip()
 
     @field_validator('edad')
     def validar_edad(cls, v):
-        if v is None:
+        if not v or not v.strip():
             raise ValueError("Debe ingresar la edad")
-        if not isinstance(v, int):
+        if not v.isdigit():
             raise ValueError("La edad debe ser un número entero")
-        if v < 18:
+        v_int = int(v)
+        if v_int < 18:
             raise ValueError("La edad mínima es 18 años")
-        if v > 100:
+        if v_int > 100:
             raise ValueError("La edad máxima es 100 años")
-        return v
+        return v_int
 
     @field_validator('fecha')
     def validar_fecha(cls, v):
@@ -96,43 +105,49 @@ class TrabajadorModel(BaseModel):
 
     @field_validator('telefono_casa')
     def validar_telefono_casa(cls, v):
-        if not isinstance(v, str):
+        if not v or not v.strip():
             raise ValueError("El teléfono fijo debe ser un número válido")
+        v = v.strip()
         if not re.match(r'^9[0-9]{8}$', v):
             raise ValueError("Teléfono fijo inválido (Ej: 912345678)")
         return v
 
     @field_validator('telefono_movil')
     def validar_telefono_movil(cls, v):
-        if not isinstance(v, str):
+        if not v or not v.strip():
             raise ValueError("El teléfono móvil debe ser un número válido")
+        v = v.strip()
         if not re.match(r'^6[0-9]{8}$', v):
             raise ValueError("Teléfono móvil inválido (Ej: 612345678)")
         return v
 
     @field_validator('sueldo_base')
     def validar_sueldo_base(cls, v):
-        if v is None:
+        if not v or not v.strip():
             raise ValueError("Debe ingresar el sueldo base")
-        if not isinstance(v, (int, float)):
+        try:
+            v_float = float(v)
+        except ValueError:
             raise ValueError("El sueldo base debe ser un número")
-        if v < 0:
+        if v_float < 0:
             raise ValueError("El sueldo base no puede ser negativo")
-        if v > 1_000_000:
+        if v_float > 1_000_000:
             raise ValueError("El sueldo base no puede ser mayor a 1.000.000 €")
-        return round(float(v), 2)
+        return round(v_float, 2)
 
     @field_validator('comision')
     def validar_comision(cls, v):
-        if v is None:
+        if not v or not v.strip():
             raise ValueError("Debe ingresar la comisión")
-        if not isinstance(v, (int, float)):
+        try:
+            v_float = float(v)
+        except ValueError:
             raise ValueError("La comisión debe ser un número")
-        if v < 0:
+        if v_float < 0:
             raise ValueError("La comisión no puede ser negativa")
-        if v > 500_000:
+        if v_float > 500_000:
             raise ValueError("La comisión no puede ser mayor a 500.000 €")
-        return round(float(v), 2)
+        return round(v_float, 2)
 
     @field_validator('password')
     def validar_password(cls, v):
@@ -155,19 +170,19 @@ class TrabajadorModel(BaseModel):
 
     @field_validator('provincia')
     def validar_provincia(cls, v):
-        if not v:
+        if not v or not v.strip():
             raise ValueError("Debe seleccionar una provincia")
-        if not isinstance(v, int):
+        if not v.isdigit():
             raise ValueError("La provincia seleccionada no es válida")
-        return v
+        return int(v)
 
     @field_validator('ciudad')
     def validar_ciudad(cls, v):
-        if not v:
+        if not v or not v.strip():
             raise ValueError("Debe seleccionar una ciudad")
-        if not isinstance(v, int):
+        if not v.isdigit():
             raise ValueError("La ciudad seleccionada no es válida")
-        return v
+        return int(v)
 
     @field_validator('codigo_postal')
     def validar_codigo_postal(cls, v):
@@ -184,8 +199,6 @@ class TrabajadorModel(BaseModel):
         if total <= 0:
             raise ValueError("El sueldo bruto debe ser mayor que cero")
         return model
-
-
   
 
 

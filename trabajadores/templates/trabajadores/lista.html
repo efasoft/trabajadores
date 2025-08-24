@@ -36,7 +36,7 @@
   transition: width 0.3s ease;
 }
 
-.page-title {
+.page-title {  
 display: flex;    
 border-radius: 0.4rem;    
 font-family: 'Segoe UI', sans-serif;
@@ -89,6 +89,34 @@ margin: 0.6rem 0;
 text-transform: uppercase;
 }
 
+.header-row-datos {
+display: flex;
+align-items: center;
+padding: 0.4rem 1rem;
+border-radius: 0.4rem;
+font-size: 0.90rem;
+background-color: #dedede; 
+border-left: 4px solid #8A8A8A; 
+font-weight: bold;
+box-shadow: 0 3px 4px rgba(0,0,0,0.15);
+margin: 0.6rem 0;
+text-transform: uppercase;
+}
+
+.header-row-titulo {
+display: flex;
+align-items: center;
+padding: 0.4rem 1rem;
+border-radius: 0.4rem;
+font-size: 0.90rem;
+background-color: #fff;
+border-left: 4px solid #8A8A8A; 
+font-weight: bold;
+box-shadow: 0 3px 4px rgba(0,0,0,0.15);
+margin: 0.6rem 0;
+text-transform: uppercase;
+}
+
 .card-trabajador {
 display: flex;    
 border-radius: 0.4rem;  
@@ -112,6 +140,11 @@ box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
 .col-fecha { width: 15%; text-align: center;}
 .col-activo { width: 7%; text-align: center;}
 .col-sueldo { width: 12%; text-align: right;}
+
+.col-titulo {background-color: #fff; color: rgba(243, 244, 244, 0.95); padding: 10.4rem 10rem; width: 100%; height:60%; text-align: left;}
+
+.col-titulo-datos { width: 100%; text-align: left;}
+
 
 .acciones {
 display: flex;
@@ -221,6 +254,16 @@ border-radius: 10px;
 <div class="col-activo">Activo</div>
 <div class="col-sueldo">Sueldo Bruto €</div>
 </div>
+<!--
+<div class="header-row-datos">
+  <div class="col-titulo-datos">Condición de Trabajo</div>
+</div>
+
+<div class="header-row-titulo">
+  <div class="col-titulo">T</div>
+</div>
+-->
+
 
 <div id="trabajadoresContainer">
 {% for t in trabajadores %}
