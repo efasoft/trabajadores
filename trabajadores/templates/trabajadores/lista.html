@@ -1,260 +1,373 @@
-{% extends 'base.html' %}
-{% load humanize %}
-{% block title %}Lista de Trabajadores{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% load humanize %} {% block title %}Lista de
+Trabajadores{% endblock %} {% block content %}
 <style>
+  /* Overlay Loader */
+  #overlayLoader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .spinner-border {
+    width: 4rem;
+    height: 4rem;
+    color: #17a2b8;
+  }
+  .progress {
+    width: 60%;
+    height: 8px;
+    margin-top: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    background: linear-gradient(90deg, #17a2b8, #0072ff, #00c6ff);
+    width: 0%;
+    height: 100%;
+    transition: width 0.3s ease;
+  }
 
-/* Overlay Loader */
-#overlayLoader {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7);
-  z-index: 2000;
+  /* NUEVO Spinner */
+  /* From Uiverse.io by satyamchaudharydev */ 
+  .loading {
+  --speed-of-animation: 0.9s;
+  --gap: 6px;
+  --first-color: #4c86f9;
+  --second-color: #49a84c;
+  --third-color: #f6bb02;
+  --fourth-color: #f6bb02;
+  --fifth-color: #2196f3;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-}
-.spinner-border {
-  width: 4rem;
-  height: 4rem;
-  color: #17a2b8;
-}
-.progress {
-  width: 60%;
-  height: 8px;
-  margin-top: 20px;
-  border-radius: 5px;
-  overflow: hidden;
-}
-.progress-bar {
-  background: linear-gradient(90deg, #17a2b8, #0072ff, #00c6ff);
-  width: 0%;
-  height: 100%;
-  transition: width 0.3s ease;
-}
+  align-items: center;
+  width: 100px;
+  gap: 6px;
+  height: 100px;
+  }
 
-.page-title {  
-display: flex;    
-border-radius: 0.4rem;    
-font-family: 'Segoe UI', sans-serif;
-font-size: 1.7rem;
-font-weight: 700;
-border-left: 4px solid #8A8A8A; 
-padding: 0.2rem;    
-color: #0A0A0A;
-text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-margin-bottom: 0.4rem;
-}
+  .loading span {
+  width: 4px;
+  height: 50px;
+  background: var(--first-color);
+  animation: scale var(--speed-of-animation) ease-in-out infinite;
+  }
 
-.icon-btn {
-background: none;
-border: none;
-padding: 0.2rem;
-font-size: 1.2rem;
-color: #777; 
-transition: transform 0.2s ease, color 0.2s ease;
-}
-.icon-btn:hover {
-transform: scale(1.15);
-color: #0A0A0A;
-}
+  .loading span:nth-child(2) {
+  background: var(--second-color);
+  animation-delay: -0.8s;
+  }
 
-.search-actions {
-display: flex;
-align-items: center;
-gap: 0.4rem;
-}
+  .loading span:nth-child(3) {
+  background: var(--third-color);
+  animation-delay: -0.7s;
+  }
 
-.search-box {
-max-width: 260px;
-height: 34px;
-font-size: 0.9rem;
-padding: 0.2rem 0.5rem;
-}
+  .loading span:nth-child(4) {
+  background: var(--fourth-color);
+  animation-delay: -0.6s;
+  }
 
-.header-row {
-display: flex;
-align-items: center;
-padding: 0.4rem 1rem;
-border-radius: 0.4rem;
-font-size: 0.90rem;
-background-color: #fff;
-border-left: 4px solid #8A8A8A; 
-font-weight: bold;
-box-shadow: 0 3px 4px rgba(0,0,0,0.15);
-margin: 0.6rem 0;
-text-transform: uppercase;
-}
+  .loading span:nth-child(5) {
+  background: var(--fifth-color);
+  animation-delay: -0.5s;
+  }
 
-.header-row-datos {
-display: flex;
-align-items: center;
-padding: 0.4rem 1rem;
-border-radius: 0.4rem;
-font-size: 0.90rem;
-background-color: #dedede; 
-border-left: 4px solid #8A8A8A; 
-font-weight: bold;
-box-shadow: 0 3px 4px rgba(0,0,0,0.15);
-margin: 0.6rem 0;
-text-transform: uppercase;
-}
+  @keyframes scale {
+  0%, 40%, 100% {
+    transform: scaleY(0.05);
+  }
 
-.header-row-titulo {
-display: flex;
-align-items: center;
-padding: 0.4rem 1rem;
-border-radius: 0.4rem;
-font-size: 0.90rem;
-background-color: #fff;
-border-left: 4px solid #8A8A8A; 
-font-weight: bold;
-box-shadow: 0 3px 4px rgba(0,0,0,0.15);
-margin: 0.6rem 0;
-text-transform: uppercase;
-}
+  20% {
+    transform: scaleY(1);
+  }
+  }
+  /* FIN*/
+  .page-title {
+    display: flex;
+    border-radius: 0.4rem;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    border-left: 4px solid #8a8a8a;
+    padding: 0.2rem;
+    color: #0a0a0a;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.4rem;
+  }
 
-.card-trabajador {
-display: flex;    
-border-radius: 0.4rem;  
-background: white;
-padding: 0.3rem 1rem;    
-border-left: 4px solid #17a2b8;
-box-shadow: 0 2px 0.5px rgba(0, 0, 0, 0.1);
-transition: all 0.3s ease;
-margin-bottom: 0.5rem;
-font-size: 0.90rem;
-}
+  .icon-btn {
+    background: none;
+    border: none;
+    padding: 0.2rem;
+    font-size: 1.2rem;
+    color: #777;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .icon-btn:hover {
+    transform: scale(1.15);
+    color: #0a0a0a;
+  }
 
-.card-trabajador:hover {
-transform: scale(0.99);
-background-color: #f4f4f4;  
-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
-}
+  .search-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
 
-.col-nombre { width: 30%; text-align: left;}
-.col-email { width: 28%; text-align: left;}
-.col-fecha { width: 15%; text-align: center;}
-.col-activo { width: 7%; text-align: center;}
-.col-sueldo { width: 12%; text-align: right;}
+  .search-box {
+    max-width: 260px;
+    height: 34px;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.5rem;
+  }
 
-.col-titulo {background-color: #fff; color: rgba(243, 244, 244, 0.95); padding: 10.4rem 10rem; width: 100%; height:60%; text-align: left;}
+  .header-row {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+    background-color: #fff;
+    border-left: 4px solid #8a8a8a;
+    font-weight: bold;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.15);
+    margin: 0.6rem 0;
+    text-transform: uppercase;
+  }
 
-.col-titulo-datos { width: 100%; text-align: left;}
+  .header-row-datos {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+    background-color: #dedede;
+    border-left: 4px solid #8a8a8a;
+    font-weight: bold;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.15);
+    margin: 0.6rem 0;
+    text-transform: uppercase;
+  }
 
+  .header-row-titulo {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+    background-color: #fff;
+    border-left: 4px solid #8a8a8a;
+    font-weight: bold;
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.15);
+    margin: 0.6rem 0;
+    text-transform: uppercase;
+  }
 
-.acciones {
-display: flex;
-gap: 0.4rem;
-align-items: center;
-margin-left: auto;
-}
+  .card-trabajador {
+    display: flex;
+    border-radius: 0.4rem;
+    background: white;
+    padding: 0.3rem 1rem;
+    border-left: 4px solid #17a2b8;
+    box-shadow: 0 2px 0.5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
 
-.fa-edit { color: #17a2b8; }
-.fa-trash { color: #dc3545; }
+  .card-trabajador:hover {
+    transform: scale(0.99);
+    background-color: #f4f4f4;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  }
 
-.footer-container {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-top: 0.8rem;
-padding: 0 0.5rem;
-}
+  .col-nombre {
+    width: 30%;
+    text-align: left;
+  }
+  .col-email {
+    width: 28%;
+    text-align: left;
+  }
+  .col-fecha {
+    width: 15%;
+    text-align: center;
+  }
+  .col-activo {
+    width: 7%;
+    text-align: center;
+  }
+  .col-sueldo {
+    width: 12%;
+    text-align: right;
+  }
 
-.footer-info {
-font-size: 0.85rem;
-font-weight: 500;
-color: #777;
-font-style: italic;
-}
+  .col-titulo {
+    background-color: #fff;
+    color: rgba(243, 244, 244, 0.95);
+    padding: 10.4rem 10rem;
+    width: 100%;
+    height: 60%;
+    text-align: left;
+  }
 
-.pagination {
-display: flex;
-gap: 0.3rem;
-}
-.pagination button {
+  .col-titulo-datos {
+    width: 100%;
+    text-align: left;
+  }
+
+  .acciones {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  .fa-edit {
+    color: #17a2b8;
+  }
+  .fa-trash {
+    color: #dc3545;
+  }
+
+  .footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.8rem;
+    padding: 0 0.5rem;
+  }
+
+  .footer-info {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #777;
+    font-style: italic;
+  }
+
+  .pagination {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .pagination button {
     background-color: #0072ff;
     color: white;
     background-color: #dedede;
     color: black;
-border: none;
-padding: 0.3rem 0.6rem;
-border-radius: 5px;
-@@ -122,222 +122,222 @@
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    @@ -122,222 +122,222 @@
 transition: all 0.2s ease;
-}
-.pagination button:hover {
+  }
+  .pagination button:hover {
     background-color: #005ecb;
     background-color: #bfbfbf;
-transform: translateY(-2px);
-box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-}
-.pagination .active {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  }
+  .pagination .active {
     background-color: #00b894;
     background-color: #17a2b8;
-}
+  }
 
-/* Scroll vertical separado */
-#trabajadoresContainer {
-overflow-y: auto;
-overflow-x: hidden;
-scrollbar-width: thin;
-scrollbar-color: #888 #f0f0f0;
-max-height: calc(5 * 3.2rem);
-padding-right: 8px; /* separación extra para que el scroll no pegue con el contenido */
-}
-#trabajadoresContainer::-webkit-scrollbar {
-width: 6px;
-}
-#trabajadoresContainer::-webkit-scrollbar-track {
-background: #f0f0f0;
-}
-#trabajadoresContainer::-webkit-scrollbar-thumb {
-background-color: #888;
-border-radius: 10px;
-}
-
+  /* Scroll vertical separado */
+  #trabajadoresContainer {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f0f0f0;
+    max-height: calc(5 * 3.2rem);
+    padding-right: 8px; /* separación extra para que el scroll no pegue con el contenido */
+  }
+  #trabajadoresContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+  #trabajadoresContainer::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+  #trabajadoresContainer::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+  }
 </style>
 <!-- Overlay inicial -->
+
 <div id="overlayLoader">
-    <div class="spinner-border" role="status"></div>
-    <div class="progress">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <span class="text-white mt-3">Cargando trabajadores...</span>
+  <!-- ANTERIOR Spinner   
+  <div class="spinner-border" role="status"></div>
+  -->
+  <!-- NUEVO Spinner -->
+  <!-- From Uiverse.io by satyamchaudharydev --> 
+  <div class="loading">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <!-- FIN -->
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <span class="text-white mt-3">Cargando trabajadores...</span>
 </div>
 
 <div class="card">
-<div class="d-flex justify-content-between align-items-center">
-<h3 class="page-title">Relación de Trabajadores</h3>
-</div>
+  <div class="d-flex justify-content-between align-items-center">
+    <h3 class="page-title">Relación de Trabajadores</h3>
+  </div>
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-<input type="text" id="searchInput" class="form-control search-box" placeholder="Buscar por nombre o email...">
-<div class="search-actions">
-<a href="{% url 'trabajadores:crear' %}" class="icon-btn" data-bs-toggle="tooltip" title="Agregar nuevo trabajador">
-<i class="fas fa-user-plus"></i>
-</a>
-<a id="confirmExportExcel" class="icon-btn" data-bs-toggle="tooltip" title="Exportar a Excel">
-<i class="fas fa-file-excel"></i>
-</a>
-<a id="btnExportPDF" class="icon-btn" data-bs-toggle="tooltip" title="Exportar a PDF">
-<i class="fas fa-file-pdf"></i>
-</a>
-</div>
-</div>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <input
+      type="text"
+      id="searchInput"
+      class="form-control search-box"
+      placeholder="Buscar por nombre o email..."
+    />
+    <div class="search-actions">
+      <a
+        href="{% url 'trabajadores:crear' %}"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Agregar nuevo trabajador"
+      >
+        <i class="fas fa-user-plus"></i>
+      </a>
+      <a
+        id="confirmExportExcel"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Exportar a Excel"
+      >
+        <i class="fas fa-file-excel"></i>
+      </a>
+      <a
+        id="btnExportPDF"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Exportar a PDF"
+      >
+        <i class="fas fa-file-pdf"></i>
+      </a>
+    </div>
+  </div>
 
-<div class="header-row">
-<div class="col-nombre">Nombre</div>
-<div class="col-email">Email</div>
-<div class="col-fecha">Fecha</div>
-<div class="col-activo">Activo</div>
-<div class="col-sueldo">Sueldo Bruto €</div>
-</div>
-<!--
+  <div class="header-row">
+    <div class="col-nombre">Nombre</div>
+    <div class="col-email">Email</div>
+    <div class="col-fecha">Fecha</div>
+    <div class="col-activo">Activo</div>
+    <div class="col-sueldo">Sueldo Bruto €</div>
+  </div>
+  <!--
 <div class="header-row-datos">
   <div class="col-titulo-datos">Condición de Trabajo</div>
 </div>
@@ -264,190 +377,229 @@ border-radius: 10px;
 </div>
 -->
 
-
-<div id="trabajadoresContainer">
-{% for t in trabajadores %}
-<div class="card-trabajador" data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}" data-email="{{ t.email|lower }}">
-<div class="col-nombre">{{ t.nombres }} {{ t.apellidos }}</div>
-<div class="col-email">{{ t.email }}</div>
-<div class="col-fecha">{{ t.fecha|date:"d/m/Y" }}</div>
-<div class="col-activo">{{ t.activo|yesno:"Sí,No" }}</div>
-<div class="col-sueldo">{{ t.sueldo_bruto|floatformat:2|intcomma }}</div>
-<div class="acciones">
-<a href="{% url 'trabajadores:editar' t.id %}" data-bs-toggle="tooltip" title="Editar"><i class="fas fa-edit"></i></a>
-<i class="fas fa-trash" onclick="confirmDel({{ t.id }})" data-bs-toggle="tooltip" title="Eliminar"></i>
-</div>
-</div>
-{% endfor %}
-</div>
-
-<div class="footer-container">
-<div class="pagination" id="paginacion"></div>
-<div class="footer-info">
-    {% if not request.GET.q %}
-      Total registros: <span id="totalRegistros">{{ total|intcomma }}</span>
-    {% else %}
-    Vamos: <span id="totalRegistros">{{ trabajadores|length|intcomma }}</span>
-    {% endif %}
+  <div id="trabajadoresContainer">
+    {% for t in trabajadores %}
+    <div
+      class="card-trabajador"
+      data-nombre="{{ t.nombres|lower }} {{ t.apellidos|lower }}"
+      data-email="{{ t.email|lower }}"
+    >
+      <div class="col-nombre">{{ t.nombres }} {{ t.apellidos }}</div>
+      <div class="col-email">{{ t.email }}</div>
+      <div class="col-fecha">{{ t.fecha|date:"d/m/Y" }}</div>
+      <div class="col-activo">{{ t.activo|yesno:"Sí,No" }}</div>
+      <div class="col-sueldo">{{ t.sueldo_bruto|floatformat:2|intcomma }}</div>
+      <div class="acciones">
+        <a
+          href="{% url 'trabajadores:editar' t.id %}"
+          data-bs-toggle="tooltip"
+          title="Editar"
+          ><i class="fas fa-edit"></i
+        ></a>
+        <i
+          class="fas fa-trash"
+          onclick="confirmDel({{ t.id }})"
+          data-bs-toggle="tooltip"
+          title="Eliminar"
+        ></i>
+      </div>
+    </div>
+    {% endfor %}
   </div>
-</div>
+
+  <div class="footer-container">
+    <div class="pagination" id="paginacion"></div>
+    <div class="footer-info">
+      {% if not request.GET.q %} Total registros:
+      <span id="totalRegistros">{{ total|intcomma }}</span> {% else %} Vamos:
+      <span id="totalRegistros">{{ trabajadores|length|intcomma }}</span>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <script>
-    /* === Overlay con progreso === */
-    document.addEventListener("DOMContentLoaded", function () {
-      const overlay = document.getElementById("overlayLoader");
-      const progressBar = document.getElementById("progressBar");
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = Math.min(progress + 15, 100);
-        progressBar.style.width = progress + "%";
-        if (progress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => overlay.style.display = "none", 400);
-        }
-      }, 300);
-    });
-    
-    /* === Lazy Loading === */
-    const lazyItems = document.querySelectorAll('.lazy-item');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+  /* === Overlay con progreso === */
+  document.addEventListener("DOMContentLoaded", function () {
+    const overlay = document.getElementById("overlayLoader");
+    const progressBar = document.getElementById("progressBar");
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress = Math.min(progress + 15, 100);
+      progressBar.style.width = progress + "%";
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => (overlay.style.display = "none"), 400);
+      }
+    }, 300);
+  });
+
+  /* === Lazy Loading === */
+  const lazyItems = document.querySelectorAll(".lazy-item");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.style.visibility = 'visible';
+          entry.target.style.visibility = "visible";
           observer.unobserve(entry.target);
         }
       });
-    }, { root: document.querySelector("#trabajadoresContainer"), threshold: 0.1 });
-    
-    lazyItems.forEach(el => {
-      el.style.visibility = "hidden";
-      observer.observe(el);
+    },
+    { root: document.querySelector("#trabajadoresContainer"), threshold: 0.1 }
+  );
+
+  lazyItems.forEach((el) => {
+    el.style.visibility = "hidden";
+    observer.observe(el);
+  });
+</script>
+
+<script>
+  function confirmDel(id) {
+    Swal.fire({
+      title: "¿Eliminar?",
+      text: "No se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((r) => {
+      if (r.isConfirmed) window.location.href = "/eliminar/" + id + "/";
     });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("searchInput");
+    const container = document.getElementById("trabajadoresContainer");
+    const paginacion = document.getElementById("paginacion");
+    const totalRegistros = document.getElementById("totalRegistros");
+    const elementos = Array.from(container.children);
+    const totalOriginal = elementos.length;
+    const porPagina = 10;
+    let paginaActual = 1;
+    let scrollTimeout;
+
+    function filtrar() {
+      const query = searchInput.value.toLowerCase();
+      return elementos.filter(
+        (el) =>
+          el.dataset.nombre.includes(query) || el.dataset.email.includes(query)
+      );
+    }
+
+    function renderPaginacion(items) {
+      paginacion.innerHTML = "";
+      const total = Math.ceil(items.length / porPagina);
+      const maxVisible = 5;
+      let start = Math.max(1, paginaActual - Math.floor(maxVisible / 2));
+      let end = Math.min(total, start + maxVisible - 1);
+
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+
+      if (paginaActual > 1) {
+        paginacion.innerHTML += `<button onclick="cambiarPagina(1)"><i class="fas fa-angle-double-left"></i></button>`;
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${
+          paginaActual - 1
+        })"><i class="fas fa-angle-left"></i></button>`;
+      }
+
+      for (let i = start; i <= end; i++) {
+        paginacion.innerHTML += `<button class="${
+          i === paginaActual ? "active" : ""
+        }" onclick="cambiarPagina(${i})">${i}</button>`;
+      }
+
+      if (paginaActual < total) {
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${
+          paginaActual + 1
+        })"><i class="fas fa-angle-right"></i></button>`;
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${total})"><i class="fas fa-angle-double-right"></i></button>`;
+      }
+    }
+
+    window.cambiarPagina = function (num) {
+      paginaActual = num;
+      const scrollY =
+        (paginaActual - 1) *
+        porPagina *
+        (container.firstElementChild?.offsetHeight || 30);
+      container.scrollTop = scrollY;
+      renderPaginacion(filtrar());
+    };
+
+    function actualizarVista() {
+      const filtrados = filtrar();
+      container.innerHTML = "";
+      filtrados.forEach((el) => container.appendChild(el));
+      totalRegistros.textContent = `${filtrados.length.toLocaleString(
+        "es-ES"
+      )} de ${totalOriginal.toLocaleString("es-ES")}`;
+      renderPaginacion(filtrados);
+    }
+
+    // Sincronizar número de página con scroll
+    container.addEventListener("scroll", () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollTop = container.scrollTop;
+        const filaAltura = container.firstElementChild
+          ? container.firstElementChild.offsetHeight
+          : 30;
+        const nuevaPagina =
+          Math.floor(scrollTop / (filaAltura * porPagina)) + 1;
+        if (nuevaPagina !== paginaActual) {
+          paginaActual = nuevaPagina;
+          renderPaginacion(filtrar());
+        }
+      }, 100);
+    });
+
+    searchInput.addEventListener("input", () => {
+      paginaActual = 1;
+      actualizarVista();
+    });
+
+    actualizarVista();
+  });
 </script>
 
 <script>
-function confirmDel(id) {
-Swal.fire({
-title:'¿Eliminar?',
-text:'No se puede deshacer',
-icon:'warning',
-showCancelButton:true,
-confirmButtonText:'Sí, eliminar',
-cancelButtonText:'Cancelar'
-}).then(r => { if (r.isConfirmed) window.location.href = '/eliminar/' + id + '/'; });
-}
+  document
+    .getElementById("btnExportPDF")
+    .addEventListener("click", function () {
+      const filtro = document.getElementById("searchInput").value;
+      Swal.fire({
+        title: "¿Desea ver reporte_trabajadores.pdf?",
+        showCancelButton: true,
+        confirmButtonText: "Ver ahora",
+        cancelButtonText: "Descargar",
+        icon: "question",
+      }).then((result) => {
+        const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${
+          result.isConfirmed ? 0 : 1
+        }`;
+        window.open(url, "_blank");
+      });
+    });
 
-
-document.addEventListener("DOMContentLoaded", () => {
-const searchInput = document.getElementById("searchInput");
-const container = document.getElementById("trabajadoresContainer");
-const paginacion = document.getElementById("paginacion");
-const totalRegistros = document.getElementById("totalRegistros");
-const elementos = Array.from(container.children);
-const totalOriginal = elementos.length;
-const porPagina = 10;
-let paginaActual = 1;
-let scrollTimeout;
-
-function filtrar() {
-const query = searchInput.value.toLowerCase();
-return elementos.filter(el =>
-el.dataset.nombre.includes(query) || el.dataset.email.includes(query)
-);
-}
-
-function renderPaginacion(items) {
-paginacion.innerHTML = "";
-const total = Math.ceil(items.length / porPagina);
-const maxVisible = 5;
-let start = Math.max(1, paginaActual - Math.floor(maxVisible / 2));
-let end = Math.min(total, start + maxVisible - 1);
-
-if (end - start + 1 < maxVisible) {
-start = Math.max(1, end - maxVisible + 1);
-}
-
-if (paginaActual > 1) {
-paginacion.innerHTML += `<button onclick="cambiarPagina(1)"><i class="fas fa-angle-double-left"></i></button>`;
-paginacion.innerHTML += `<button onclick="cambiarPagina(${paginaActual - 1})"><i class="fas fa-angle-left"></i></button>`;
-}
-
-for (let i = start; i <= end; i++) {
-paginacion.innerHTML += `<button class="${i===paginaActual?'active':''}" onclick="cambiarPagina(${i})">${i}</button>`;
-}
-
-if (paginaActual < total) {
-paginacion.innerHTML += `<button onclick="cambiarPagina(${paginaActual + 1})"><i class="fas fa-angle-right"></i></button>`;
-paginacion.innerHTML += `<button onclick="cambiarPagina(${total})"><i class="fas fa-angle-double-right"></i></button>`;
-}
-}
-
-window.cambiarPagina = function(num) {
-paginaActual = num;
-const scrollY = (paginaActual - 1) * porPagina * (container.firstElementChild?.offsetHeight || 30);
-container.scrollTop = scrollY;
-renderPaginacion(filtrar());
-};
-
-function actualizarVista() {
-const filtrados = filtrar();
-container.innerHTML = "";
-filtrados.forEach(el => container.appendChild(el));
-totalRegistros.textContent = `${filtrados.length.toLocaleString('es-ES')} de ${totalOriginal.toLocaleString('es-ES')}`;
-renderPaginacion(filtrados);
-}
-
-// Sincronizar número de página con scroll
-container.addEventListener("scroll", () => {
-clearTimeout(scrollTimeout);
-scrollTimeout = setTimeout(() => {
-const scrollTop = container.scrollTop;
-const filaAltura = container.firstElementChild ? container.firstElementChild.offsetHeight : 30;
-const nuevaPagina = Math.floor(scrollTop / (filaAltura * porPagina)) + 1;
-if (nuevaPagina !== paginaActual) {
-paginaActual = nuevaPagina;
-renderPaginacion(filtrar());
-}
-}, 100);
-});
-
-searchInput.addEventListener("input", () => {
-paginaActual = 1;
-actualizarVista();
-});
-
-actualizarVista();
-});
-</script>
-
-<script>
-document.getElementById("btnExportPDF").addEventListener("click", function () {
-const filtro = document.getElementById("searchInput").value;
-Swal.fire({
-title: '¿Desea ver reporte_trabajadores.pdf?',
-showCancelButton: true,
-confirmButtonText: 'Ver ahora',
-cancelButtonText: 'Descargar',
-icon: 'question'
-}).then((result) => {
-const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
-window.open(url, '_blank');
-});
-});
-
-document.getElementById("confirmExportExcel").addEventListener("click", function () {
-const filtro = document.getElementById("searchInput").value;
-Swal.fire({
-title: "¿Desea ver el archivo Excel?",
-icon: "question",
-showCancelButton: true,
-confirmButtonText: "Sí, mostrar",
-cancelButtonText: "No, descargar",
-}).then((result) => {
-const url = `/exportar/excel/?q=${encodeURIComponent(filtro)}&descargar=${result.isConfirmed ? 0 : 1}`;
-window.open(url, '_blank');
-});
-});
+  document
+    .getElementById("confirmExportExcel")
+    .addEventListener("click", function () {
+      const filtro = document.getElementById("searchInput").value;
+      Swal.fire({
+        title: "¿Desea ver el archivo Excel?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, mostrar",
+        cancelButtonText: "No, descargar",
+      }).then((result) => {
+        const url = `/exportar/excel/?q=${encodeURIComponent(
+          filtro
+        )}&descargar=${result.isConfirmed ? 0 : 1}`;
+        window.open(url, "_blank");
+      });
+    });
 </script>
 {% endblock %}
