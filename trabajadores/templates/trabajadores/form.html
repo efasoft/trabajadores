@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -13,141 +12,173 @@
 
           <form method="POST" enctype="multipart/form-data" id="trabajadorForm">
             {% csrf_token %}
-            <div class="row g-4">
 
-              <!-- Nombres -->
-              <div class="col-md-6">
-                <label for="id_nombres" class="form-label">Nombres</label>
-                <input type="text" name="nombres" id="id_nombres" value="{{ form.nombres.value|default_if_none:'' }}" class="form-control">
-              </div>
+            <!-- TARJETA: DATOS DEL TRABAJADOR -->
+            <div class="card mb-4 border-0 shadow-sm">
+              <div class="card-header bg-light fw-bold">DATOS DEL TRABAJADOR</div>
+              <div class="card-body">
+                <div class="row g-4">
 
-              <!-- Apellidos -->
-              <div class="col-md-6">
-                <label for="id_apellidos" class="form-label">Apellidos</label>
-                <input type="text" name="apellidos" id="id_apellidos" value="{{ form.apellidos.value|default_if_none:'' }}" class="form-control" >
-              </div>
+                  <!-- Nombres y Apellidos -->
+                  <div class="col-md-6">
+                    <label for="id_nombres" class="form-label">Nombres</label>
+                    <input type="text" name="nombres" id="id_nombres" value="{{ form.nombres.value|default_if_none:'' }}" class="form-control">
+                  </div>
 
-              <!-- Email -->
-              <div class="col-md-6">
-                <label for="id_email" class="form-label">Correo Electrónico</label>
-                <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control">
-              </div>
+                  <div class="col-md-6">
+                    <label for="id_apellidos" class="form-label">Apellidos</label>
+                    <input type="text" name="apellidos" id="id_apellidos" value="{{ form.apellidos.value|default_if_none:'' }}" class="form-control">
+                  </div>
 
-              <!-- Fecha -->
-              <div class="col-md-6 mb-3">
-                <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
-                <input 
-                   type="text" 
-                   id="id_fecha" 
-                   name="fecha" 
-                   class="form-control datepicker" 
-                   placeholder="DD/MM/AAAA" 
-                   value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}">
-               </div>
+                  <!-- Email, Fecha, Edad -->
+                  <div class="col-md-6">
+                    <label for="id_email" class="form-label">Correo Electrónico</label>
+                    <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control">
+                  </div>
 
-              <!-- Edad -->
-              <div class="col-md-6">
-                <label for="id_edad" class="form-label">Edad</label>
-                <input type="number" name="edad" id="id_edad" value="{{ form.edad.value|default_if_none:'' }}" class="form-control">
-              </div>
+                  <div class="col-md-3">
+                    <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
+                    <input 
+                      type="text" 
+                      id="id_fecha" 
+                      name="fecha" 
+                      class="form-control datepicker" 
+                      placeholder="DD/MM/AAAA" 
+                      value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}">
+                  </div>
 
-              <!-- Teléfonos -->
-              <div class="col-md-6">
-                <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
-                <input type="text" name="telefono_casa" id="id_telefono_casa" value="{{ form.telefono_casa.value|default_if_none:'' }}" class="form-control">
-              </div>
+                  <div class="col-md-3">
+                    <label for="id_edad" class="form-label">Edad</label>
+                    <input type="number" name="edad" id="id_edad" value="{{ form.edad.value|default_if_none:'' }}" class="form-control">
+                  </div>
 
-              <div class="col-md-6">
-                <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
-                <input type="text" name="telefono_movil" id="id_telefono_movil" value="{{ form.telefono_movil.value|default_if_none:'' }}" class="form-control">
-              </div>
-
-              <!-- Provincia -->
-              <div class="col-md-6">
-                <label for="id_provincia" class="form-label">Provincia</label>
-                <select name="provincia" id="id_provincia" class="form-select">
-                  <option value="">Seleccione una provincia</option>
-                  {% for p in provincias %}
-                    <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>
-                      {{ p.nombre }}
-                    </option>
-                  {% endfor %}
-                </select>
-              </div>
-
-              <!-- Ciudad -->
-              <div class="col-md-6">
-                <label for="id_ciudad" class="form-label">Ciudad</label>
-                <select name="ciudad" id="id_ciudad" class="form-select">
-                  <option value="">Seleccione una ciudad</option>
-                  {% if ciudades %}
-                    {% for c in ciudades %}
-                      <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}"
-                        {% if form.ciudad.value == c.id %}selected{% endif %}>
-                        {{ c.nombre }}
-                      </option>
-                    {% endfor %}
-                  {% endif %}
-                </select>
-              </div>      
-
-              <!-- Código Postal (NUEVO CAMPO) -->
-              <div class="col-md-6">
-                <label for="id_codigo_postal" class="form-label">Código Postal</label>
-                <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control">
-              </div>                         
-
-              <!-- Sueldo Base y Comisión -->
-              <div class="col-md-6">
-                <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
-                <input type="number" step="0.01" name="sueldo_base" id="id_sueldo_base" value="{{ form.sueldo_base.value|default_if_none:'' }}" class="form-control">
-              </div>
-
-              <div class="col-md-6">
-                <label for="id_comision" class="form-label">Comisión (%)</label>
-                <input type="number" step="0.01" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control">
-              </div>
-
-              <!-- Sueldo Bruto solo lectura -->
-              <div class="col-md-6 mb-3">
-                <label for="id_sueldo_bruto" class="form-label">Sueldo Bruto</label>
-                <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" class="form-control bg-light" value="{{ form.instance.sueldo_bruto }}" readonly>
-              </div>
-
-              <!-- Foto -->
-              <div class="col-md-6">
-                <label for="id_foto" class="form-label">Foto</label>
-                <input type="file" name="foto" id="id_foto" class="form-control mb-2" accept="image/*" onchange="vistaPreviaFoto(event)">
-
-                <div class="mt-2">
-                  {% if trabajador.foto %}
-                    <label class="form-label d-block">Imagen actual:</label>
-                    <img id="preview_foto" src="{{ trabajador.foto.url }}" alt="Foto actual" class="img-thumbnail" style="max-height: 120px;">
-                  {% else %}
-                    <img id="preview_foto" src="#" alt="Vista previa" class="img-thumbnail d-none" style="max-height: 120px;">
-                  {% endif %}
                 </div>
               </div>
+            </div>
 
-              <!-- Activo -->
-              <div class="col-md-6 d-flex align-items-end">
-                <div class="form-check">
-                  <input type="checkbox" name="activo" id="id_activo" class="form-check-input" {% if form.activo.value %}checked{% endif %}>
-                  <label for="id_activo" class="form-check-label">¿Activo?</label>
+            <!-- TARJETA: DIRECCIÓN -->
+            <div class="card mb-4 border-0 shadow-sm">
+              <div class="card-header bg-light fw-bold">DIRECCIÓN</div>
+              <div class="card-body">
+                <div class="row g-4">
+
+                  <!-- Provincia y Ciudad -->
+                  <div class="col-md-6">
+                    <label for="id_provincia" class="form-label">Provincia</label>
+                    <select name="provincia" id="id_provincia" class="form-select">
+                      <option value="">Seleccione una provincia</option>
+                      {% for p in provincias %}
+                        <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>
+                          {{ p.nombre }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="id_ciudad" class="form-label">Ciudad</label>
+                    <select name="ciudad" id="id_ciudad" class="form-select">
+                      <option value="">Seleccione una ciudad</option>
+                      {% if ciudades %}
+                        {% for c in ciudades %}
+                          <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}"
+                            {% if form.ciudad.value == c.id %}selected{% endif %}>
+                            {{ c.nombre }}
+                          </option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+
+                  <!-- Código Postal, Teléfonos -->
+                  <div class="col-md-4">
+                    <label for="id_codigo_postal" class="form-label">Código Postal</label>
+                    <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control">
+                  </div>
+
+                  <div class="col-md-4">
+                    <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
+                    <input type="text" name="telefono_casa" id="id_telefono_casa" value="{{ form.telefono_casa.value|default_if_none:'' }}" class="form-control">
+                  </div>
+
+                  <div class="col-md-4">
+                    <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
+                    <input type="text" name="telefono_movil" id="id_telefono_movil" value="{{ form.telefono_movil.value|default_if_none:'' }}" class="form-control">
+                  </div>
+
                 </div>
               </div>
+            </div>
 
-              <!-- Contraseña -->
-              <div class="col-md-6">
-                <label for="id_password" class="form-label">Contraseña</label>
-                <div class="input-group">
-                  <input type="password" name="password" id="id_password" value="{{ form.password.value|default_if_none:'' }}" class="form-control">
-                  <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
-                    <i class="fa fa-eye"></i>
-                  </button>
+            <!-- TARJETA: CONDICIÓN DE TRABAJO -->
+            <div class="card mb-4 border-0 shadow-sm">
+              <div class="card-header bg-light fw-bold">CONDICIÓN DE TRABAJO</div>
+              <div class="card-body">
+                <div class="row g-4">
+
+                  <!-- Sueldo Base, Comisión, Sueldo Bruto -->
+                  <div class="col-md-4">
+                    <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
+                    <input type="number" step="0.01" name="sueldo_base" id="id_sueldo_base" value="{{ form.sueldo_base.value|default_if_none:'' }}" class="form-control">
+                  </div>
+
+                  <div class="col-md-4">
+                    <label for="id_comision" class="form-label">Comisión (%)</label>
+                    <input type="number" step="0.01" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control">
+                  </div>
+
+                  <div class="col-md-4">
+                    <label for="id_sueldo_bruto" class="form-label">Sueldo Bruto</label>
+                    <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" class="form-control bg-light" value="{{ form.instance.sueldo_bruto }}" readonly>
+                  </div>
+
                 </div>
               </div>
+            </div>
 
+            <!-- TARJETA: FOTO Y CONTRASEÑA -->
+            <div class="card mb-4 border-0 shadow-sm">
+              <div class="card-header bg-light fw-bold">FOTO Y CONTRASEÑA</div>
+              <div class="card-body">
+                <div class="row g-4">
+
+                  <!-- Foto -->
+                  <div class="col-md-8">
+                    <label for="id_foto" class="form-label">Foto</label>
+                    <input type="file" name="foto" id="id_foto" class="form-control mb-2" accept="image/*" onchange="vistaPreviaFoto(event)">
+                    <div class="mt-2">
+                      {% if trabajador.foto %}
+                        <label class="form-label d-block">Imagen actual:</label>
+                        <img id="preview_foto" src="{{ trabajador.foto.url }}" alt="Foto actual" class="img-thumbnail" style="max-height: 120px;">
+                      {% else %}
+                        <img id="preview_foto" src="#" alt="Vista previa" class="img-thumbnail d-none" style="max-height: 120px;">
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- Contraseña y Activo -->
+                  <div class="col-md-4">
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label for="id_password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                          <input type="password" name="password" id="id_password" value="{{ form.password.value|default_if_none:'' }}" class="form-control">
+                          <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                            <i class="fa fa-eye"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <div class="form-check">
+                          <input type="checkbox" name="activo" id="id_activo" class="form-check-input" {% if form.activo.value %}checked{% endif %}>
+                          <label for="id_activo" class="form-check-label">¿Activo?</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
             </div>
 
             <!-- Botones -->
@@ -180,7 +211,7 @@
         dateFormat: "d/m/Y",
         locale: "es",
         allowInput: true,
-        position: "above"   // 📌 Se asegura que se muestre justo sobre el input
+        position: "above"
       });
     } else {
       console.error("Flatpickr no está disponible.");
@@ -227,7 +258,6 @@ baseInput.addEventListener('input', calcularBruto);
 comisionInput.addEventListener('input', calcularBruto);
 </script>
 
-<!-- AJAX submit usando Fetch -->
 <script>
 document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -288,25 +318,31 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
     function filtrarCiudades() {
       const provinciaId = provinciaSelect.value;
       for (let option of ciudadSelect.options) {
-        if (!option.value) continue; // saltar "Seleccione"
+        if (!option.value) continue;
         option.style.display = option.getAttribute("data-provincia") === provinciaId ? "block" : "none";
       }
-      ciudadSelect.value = ""; // reset ciudad
+      ciudadSelect.value = "";
     }
   
     provinciaSelect.addEventListener("change", filtrarCiudades);
-  
-    // Ejecutar al cargar, para edición de trabajador
     filtrarCiudades();
   });
-  </script>
-  
+</script>
 
 <style>
 .card {
   border: none;
   border-radius: 1rem;
+
 }
+
+.card-header{
+  border-radius: 0.8rem;
+  font-size: 0.90rem;
+  background-color: #fff;    
+  border-left: 4px solid #8A8A8A;   
+}
+
 .form-label {
   font-weight: 600;
 }
