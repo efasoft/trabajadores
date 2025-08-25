@@ -49,6 +49,7 @@ class TrabajadorForm(forms.Form):
     sueldo_base = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'step': '0.01'}),
         required=False
+        
     )
     comision = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'step': '0.01'}),
