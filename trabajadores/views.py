@@ -75,12 +75,15 @@ def editar_trabajador(request, trabajador_id):
     if request.method == 'POST':
         form = TrabajadorForm(request.POST, request.FILES, instance=trabajador)
         if form.is_valid():
-            form.save()
+            print("¿Tiene save?", hasattr(form, 'save'))
+            print("Métodos:", [m for m in dir(form) if 'save' in m])            
+            form.save()  # ✅ Ahora debería funcionar
             return JsonResponse({
                 'success': True,
                 'message': 'Trabajador actualizado correctamente.'
             })
         else:
+            print("Errores del formulario:", form.errors)  # 🔍 Depuración            
             errors = []
             for field in form:
                 for error in field.errors:

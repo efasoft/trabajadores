@@ -21,7 +21,7 @@ class Ciudad(models.Model):
 class Trabajador(models.Model):
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
-    email = models.EmailField(blank=True, null=True)  # ✅ Permite vacío
+    email = models.CharField(max_length=255, blank=True, null=True)  # ✅ Debe existir
     telefono_movil = models.CharField(max_length=15)
     telefono_casa = models.CharField(max_length=15)  # <-- obligatorio ahora
     edad = models.PositiveIntegerField()

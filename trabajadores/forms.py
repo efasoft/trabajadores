@@ -15,7 +15,7 @@ class TrabajadorForm(forms.Form):
     )
     fecha = forms.CharField(
         widget=forms.TextInput(attrs={
-            'class': 'form-control datepicker',
+            'class': 'form-control',
             'placeholder': 'DD/MM/AAAA',
             'autocomplete': 'off'
         }),
@@ -37,7 +37,7 @@ class TrabajadorForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         required=False
     )
-    correo = forms.CharField(
+    correo = forms.EmailField(
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         required=False,
         label="Correo electrónico"
@@ -49,7 +49,6 @@ class TrabajadorForm(forms.Form):
     sueldo_base = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'step': '0.01'}),
         required=False
-        
     )
     comision = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'step': '0.01'}),
@@ -76,7 +75,6 @@ class TrabajadorForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        # Mapear 'email' → 'correo' si viene en POST
         data = kwargs.get('data', None)
         if data and 'email' in data:
             data = data.copy()
@@ -94,7 +92,7 @@ class TrabajadorForm(forms.Form):
                     if value is not None:
                         self.fields[field].initial = value
 
-            # ✅ Casos especiales: email, provincia, ciudad (asignar por ID)
+            # ✅ Casos especiales: email, provincia, ciudad
             if self.instance.email:
                 self.fields['correo'].initial = self.instance.email
             if self.instance.provincia:
@@ -171,15 +169,25 @@ class TrabajadorForm(forms.Form):
         else:
             instance = self.instance
 
+        # Campos a asignar directamente
         fields_to_assign = [
-            'nombres', 'apellidos', 'edad', 'email',
+            'nombres', 'apellidos', 'edad',
             'telefono_casa', 'telefono_movil', 'sueldo_base',
             'comision', 'password', 'foto', 'activo', 'codigo_postal'
         ]
         for field in fields_to_assign:
-            setattr(instance, field, self.cleaned_data.get(field))
+            value = self.cleaned_data.get(field)
+            if value is not None:
+                setattr(instance, field, value)
 
-        # ✅ Conversión segura de fecha DD/MM/AAAA → date
+        # ✅ ASIGNACIÓN EXPLÍCITA Y SEGURA DEL EMAIL
+        correo_value = self.cleaned_data.get("correo")
+        if correo_value is not None:
+            instance.email = correo_value  # ← ¡Forzamos la asignación!
+        else:
+            instance.email = ""  # O deja como estaba
+
+        # ✅ Manejo de fecha (DD/MM/AAAA → date)
         fecha_str = self.cleaned_data.get("fecha")
         if fecha_str:
             try:
@@ -187,18 +195,17 @@ class TrabajadorForm(forms.Form):
                 instance.fecha = fecha_date
             except ValueError:
                 self.add_error("fecha", "Fecha inválida. Usa el formato DD/MM/AAAA")
-                return instance  # No guardar si la fecha es inválida
+                return instance
 
-        # ✅ Asignar provincia y ciudad como ForeignKey
+        # ✅ Asignar provincia y ciudad (ForeignKey)
         if self.cleaned_data.get("provincia"):
             instance.provincia_id = self.cleaned_data["provincia"]
         if self.cleaned_data.get("ciudad"):
             instance.ciudad_id = self.cleaned_data["ciudad"]
-
+        print("Valor de correo en cleaned_data:", self.cleaned_data.get("correo"))
         if commit:
             instance.save()
         return instance
-
 
 # ===================================
 # FORMULARIO: PROVINCIA
@@ -227,7 +234,6 @@ class ProvinciaForm(forms.Form):
         if commit:
             instance.save()
         return instance
-
 
 # ===================================
 # FORMULARIO: CIUDAD

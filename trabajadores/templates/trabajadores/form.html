@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container py-5">
@@ -7,145 +8,133 @@
       <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body px-5 py-4">
 
-          <div class="card-header-p bg-light fw-bold mb-4">TRABAJADORES</div>
-          <!-- CREAR -EDITAR
-          <h4 class="text-center mb-4">
-            <i class="fa fa-user-plus me-2"></i>{{ accion }} Trabajador
-          </h4>
-           -->
+          <!-- CABECERA CON ICONOS -->
+          <div class="card-header-p bg-light fw-bold mb-4 d-flex justify-content-between align-items-center">
+            TRABAJADORES
+            <div>
+              {% if accion == "Editar" %}
+                <a href="#" class="btn btn-sm me-2" title="Eliminar"> 
+                  <i class="fa fa-trash"
+                  onclick="confirmarEliminar(event)"
+                  data-bs-toggle="tooltip"
+                  title="Eliminar" >    
+                  </i>             
+                </a>
+              {% endif %}
+              <a href="{% url 'trabajadores:listar' %}" class="btn btn-sm" title="Salir">
+                <i class="fa fa-arrow-right"
+                    data-bs-toggle="tooltip"
+                    title="Ver Lista de Trabajadores"                     
+                ></i>
+              </a>
+            </div>
+          </div>
           <form method="POST" enctype="multipart/form-data" id="trabajadorForm">
             {% csrf_token %}
 
-            <!-- TARJETA: DATOS DEL TRABAJADOR -->
+            <!-- DATOS DEL TRABAJADOR -->
             <div class="card mb-4 border-0 shadow-sm">
               <div class="card-header bg-light fw-bold">DATOS DEL TRABAJADOR</div>
               <div class="card-body">
                 <div class="row g-4">
-
-                  <!-- Nombres y Apellidos -->
                   <div class="col-md-6">
                     <label for="id_nombres" class="form-label">Nombres</label>
                     <input type="text" name="nombres" id="id_nombres" value="{{ form.nombres.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-6">
                     <label for="id_apellidos" class="form-label">Apellidos</label>
                     <input type="text" name="apellidos" id="id_apellidos" value="{{ form.apellidos.value|default_if_none:'' }}" class="form-control">
                   </div>
-
-                  <!-- Email, Fecha, Edad -->
                   <div class="col-md-6">
-                    <label for="id_email" class="form-label">Correo Electrónico</label>
-                    <input type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="form-control">
+                    <label for="id_correo" class="form-label">Correo Electrónico</label>
+                    <input type="email" name="correo" id="id_correo" value="{{ form.correo.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-3">
                     <label for="id_fecha" class="form-label">Fecha de Ingreso</label>
                     <input 
                       type="text" 
                       id="id_fecha" 
                       name="fecha" 
-                      class="form-control datepicker" 
+                      class="form-control" 
                       placeholder="DD/MM/AAAA" 
-                      value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}">
+                      value="{{ form.fecha.value|date:'d/m/Y'|default_if_none:'' }}"
+                      autocomplete="off">
                   </div>
-
                   <div class="col-md-3">
                     <label for="id_edad" class="form-label">Edad</label>
                     <input type="number" name="edad" id="id_edad" value="{{ form.edad.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                 </div>
               </div>
             </div>
 
-            <!-- TARJETA: DIRECCIÓN -->
+            <!-- DIRECCIÓN -->
             <div class="card mb-4 border-0 shadow-sm">
               <div class="card-header bg-light fw-bold">DIRECCIÓN</div>
               <div class="card-body">
                 <div class="row g-4">
-
-                  <!-- Provincia y Ciudad -->
                   <div class="col-md-6">
                     <label for="id_provincia" class="form-label">Provincia</label>
                     <select name="provincia" id="id_provincia" class="form-select">
                       <option value="">Seleccione una provincia</option>
                       {% for p in provincias %}
-                        <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>
-                          {{ p.nombre }}
-                        </option>
+                        <option value="{{ p.id }}" {% if form.provincia.value == p.id %}selected{% endif %}>{{ p.nombre }}</option>
                       {% endfor %}
                     </select>
                   </div>
-
                   <div class="col-md-6">
                     <label for="id_ciudad" class="form-label">Ciudad</label>
                     <select name="ciudad" id="id_ciudad" class="form-select">
                       <option value="">Seleccione una ciudad</option>
                       {% if ciudades %}
                         {% for c in ciudades %}
-                          <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}"
-                            {% if form.ciudad.value == c.id %}selected{% endif %}>
-                            {{ c.nombre }}
-                          </option>
+                          <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}" {% if form.ciudad.value == c.id %}selected{% endif %}>{{ c.nombre }}</option>
                         {% endfor %}
                       {% endif %}
                     </select>
                   </div>
-
-                  <!-- Código Postal, Teléfonos -->
                   <div class="col-md-4">
                     <label for="id_codigo_postal" class="form-label">Código Postal</label>
                     <input type="text" name="codigo_postal" id="id_codigo_postal" value="{{ form.codigo_postal.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-4">
                     <label for="id_telefono_casa" class="form-label">Teléfono Casa</label>
                     <input type="text" name="telefono_casa" id="id_telefono_casa" value="{{ form.telefono_casa.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-4">
                     <label for="id_telefono_movil" class="form-label">Teléfono Móvil</label>
                     <input type="text" name="telefono_movil" id="id_telefono_movil" value="{{ form.telefono_movil.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                 </div>
               </div>
             </div>
 
-            <!-- TARJETA: CONDICIÓN DE TRABAJO -->
+            <!-- CONDICIÓN DE TRABAJO -->
             <div class="card mb-4 border-0 shadow-sm">
               <div class="card-header bg-light fw-bold">CONDICIÓN DE TRABAJO</div>
               <div class="card-body">
                 <div class="row g-4">
-
-                  <!-- Sueldo Base, Comisión, Sueldo Bruto -->
                   <div class="col-md-4">
                     <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
                     <input type="number" step="0.01" name="sueldo_base" id="id_sueldo_base" value="{{ form.sueldo_base.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-4">
                     <label for="id_comision" class="form-label">Comisión (%)</label>
                     <input type="number" step="0.01" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control">
                   </div>
-
                   <div class="col-md-4">
                     <label for="id_sueldo_bruto" class="form-label">Sueldo Bruto</label>
                     <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" class="form-control bg-light" value="{{ form.instance.sueldo_bruto }}" readonly>
                   </div>
-
                 </div>
               </div>
             </div>
 
-            <!-- TARJETA: FOTO Y CONTRASEÑA -->
+            <!-- FOTO Y CONTRASEÑA -->
             <div class="card mb-4 border-0 shadow-sm">
               <div class="card-header bg-light fw-bold">FOTO Y CONTRASEÑA</div>
               <div class="card-body">
                 <div class="row g-4">
-
-                  <!-- Foto -->
                   <div class="col-md-8">
                     <label for="id_foto" class="form-label">Foto</label>
                     <input type="file" name="foto" id="id_foto" class="form-control mb-2" accept="image/*" onchange="vistaPreviaFoto(event)">
@@ -158,8 +147,6 @@
                       {% endif %}
                     </div>
                   </div>
-
-                  <!-- Contraseña y Activo -->
                   <div class="col-md-4">
                     <div class="row g-3">
                       <div class="col-12">
@@ -179,17 +166,16 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
 
             <!-- Botones -->
             <div class="d-flex justify-content-between mt-4">
-              <button type="submit" class="btn btn-primary px-4">
+              <button type="submit" class="btn btn-primary px-4 py-3 btn-gradient">
                 <i class="fa fa-save me-1"></i>{{ accion }}
               </button>
-              <a href="{% url 'trabajadores:listar' %}" class="btn btn-dark px-4">
+              <a href="{% url 'trabajadores:listar' %}" class="btn btn-dark px-4 py-3 btn-gradient">
                 <i class="fa fa-times me-1"></i>Cancelar
               </a>
             </div>
@@ -204,37 +190,45 @@
 <!-- SWEETALERT2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Flatpickr (Elegante Datepicker) -->
+<!-- FLATPICKR CSS y JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    if (typeof flatpickr !== 'undefined') {
-      flatpickr(".datepicker", {
-        dateFormat: "d/m/Y",
-        locale: "es",
+    const fechaInput = document.getElementById("id_fecha");
+
+    if (fechaInput) {
+      flatpickr(fechaInput, {
+        locale: "es", // Idioma español
+        dateFormat: "d/m/Y", // Formato DD/MM/AAAA
+        altInput: true,
+        altFormat: "d/m/Y",
         allowInput: true,
-        position: "above"
+        clickOpens: true,
+        position: "above", // Asegura que se muestre arriba si no cabe abajo
+        onChange: function (selectedDates, dateStr, instance) {
+          // Opcional: acción al cambiar fecha
+        }
       });
     } else {
-      console.error("Flatpickr no está disponible.");
+      console.warn('No se encontró el campo #id_fecha');
     }
   });
 </script>
 
+<!-- Resto de tus scripts (vista previa, toggle password, submit, etc.) -->
 <script>
   function vistaPreviaFoto(event) {
     const input = event.target;
     const preview = document.getElementById('preview_foto');
-  
     if (input.files && input.files[0]) {
       const reader = new FileReader();
-  
       reader.onload = function(e) {
         preview.src = e.target.result;
         preview.classList.remove('d-none');
       }
-  
       reader.readAsDataURL(input.files[0]);
     }
   }
@@ -251,7 +245,6 @@ function togglePassword() {
 const baseInput = document.getElementById("id_sueldo_base");
 const comisionInput = document.getElementById("id_comision");
 const brutoInput = document.getElementById("id_sueldo_bruto");
-
 function calcularBruto() {
   const base = parseFloat(baseInput.value) || 0;
   const comision = parseFloat(comisionInput.value) || 0;
@@ -264,7 +257,6 @@ comisionInput.addEventListener('input', calcularBruto);
 <script>
 document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-
   const form = e.target;
   const formData = new FormData(form);
   const url = form.action || window.location.pathname;
@@ -294,7 +286,6 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
       data.errors.forEach(err => {
         html += `<div>• ${err}</div>`;
       });
-
       Swal.fire({
         icon: 'error',
         title: 'Errores de validación',
@@ -302,7 +293,6 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
         confirmButtonColor: '#e74c3c'
       });
     }
-
   } catch (error) {
     Swal.fire({
       icon: 'error',
@@ -317,7 +307,6 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
   document.addEventListener("DOMContentLoaded", function () {
     const provinciaSelect = document.getElementById("id_provincia");
     const ciudadSelect = document.getElementById("id_ciudad");
-  
     function filtrarCiudades() {
       const provinciaId = provinciaSelect.value;
       for (let option of ciudadSelect.options) {
@@ -325,48 +314,85 @@ document.getElementById('trabajadorForm').addEventListener('submit', async funct
         option.style.display = option.getAttribute("data-provincia") === provinciaId ? "block" : "none";
       }
       ciudadSelect.value = "";
+      ciudadSelect.dispatchEvent(new Event('change'));
     }
-  
     provinciaSelect.addEventListener("change", filtrarCiudades);
     filtrarCiudades();
   });
 </script>
 
+<script>
+function confirmarEliminar(event) {
+  event.preventDefault();
+  const trabajadorId = {{ trabajador.id }};
+
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: "Esta acción no se puede deshacer.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(`{% url 'trabajadores:eliminar' trabajador.id %}`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Eliminado', data.message, 'success').then(() => {
+            window.location.href = "{% url 'trabajadores:listar' %}";
+          });
+        } else {
+          Swal.fire('Error', data.message || 'No se pudo eliminar', 'error');
+        }
+      })
+      .catch(() => {
+        Swal.fire('Error', 'Ocurrió un error al eliminar', 'error');
+      });
+    }
+  });
+}
+</script>
+
 <style>
-.card {
-  border: none;
-  border-radius: 1rem;
-
-}
-
-.card-header{
-  border-radius: 0.8rem;
-  font-size: 0.90rem;
-  background-color: #fff;    
-  border-left: 4px solid #8A8A8A;   
-}
-
-.card-header-p{
-  height:2.8rem;
-  padding: 0.3rem 1rem;  
+.card-header-p {
+  height: 2.8rem;
+  padding: 0.3rem 1rem;
   border-radius: 11px;
   background: linear-gradient(145deg, #ffffff, #dddddd);
-  box-shadow:  8px 8px 7px #d0d0d0,
-              -8px -8px 7px #ffffff;
+  box-shadow: 8px 8px 7px #d0d0d0, -8px -8px 7px #ffffff;
   font-size: 1.50rem;
-  border-left: 4px solid #8A8A8A;    
+  border-left: 4px solid #8A8A8A;
 }
 
-.form-label {
-  font-weight: 600;
+.btn-primary, .btn-dark {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
 .btn-primary {
   background: linear-gradient(to right, #36d1dc, #5b86e5);
-  border: none;
+}
+.btn-primary:hover {
+  background: linear-gradient(to right, #28a745, #007bff);
 }
 .btn-dark {
   background: linear-gradient(to right, #232526, #414345);
-  border: none;
+}
+.btn-dark:hover {
+  background: linear-gradient(to right, #000000, #1f1f1f);
 }
 </style>
 {% endblock %}
+
+
+
