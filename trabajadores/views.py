@@ -99,7 +99,7 @@ def editar_trabajador(request, trabajador_id):
         'accion': 'Editar',
         'trabajador': trabajador,
         'provincias': Provincia.objects.all(),
-        'ciudades': Ciudad.objects.all()
+        'ciudades': Ciudad.objects.all()  # ✅ Necesario para el script
     })
 
 

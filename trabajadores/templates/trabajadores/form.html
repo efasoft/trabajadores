@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -190,35 +189,64 @@
 <!-- SWEETALERT2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- FLATPICKR CSS y JS -->
+<!-- FLATPICKR (Fecha en español) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
+<!-- CHOICES.JS (Selects modernos) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const provinciaSelect = document.getElementById("id_provincia");
+    const ciudadSelect = document.getElementById("id_ciudad");
+
+    function actualizarCiudades() {
+      const provinciaId = provinciaSelect.value;
+      const opciones = ciudadSelect.querySelectorAll('option[data-provincia]');
+      
+      // Mostrar solo ciudades de la provincia
+      opciones.forEach(option => {
+        const visible = option.dataset.provincia === provinciaId;
+        option.style.display = visible ? 'block' : 'none';
+        if (visible && option.value === "{{ form.ciudad.value }}") {
+          option.selected = true;
+        }
+      });
+
+      // Si no hay ciudad seleccionada, usar la primera visible
+      if (!ciudadSelect.value) {
+        const primeraVisible = Array.from(opciones).find(o => o.style.display === 'block');
+        if (primeraVisible) ciudadSelect.value = primeraVisible.value;
+      }
+    }
+
+    provinciaSelect.addEventListener("change", actualizarCiudades);
+    actualizarCiudades(); // Ejecutar al cargar
+  });
+</script>
+
+<!-- FLATPICKR para fecha -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const fechaInput = document.getElementById("id_fecha");
-
     if (fechaInput) {
       flatpickr(fechaInput, {
-        locale: "es", // Idioma español
-        dateFormat: "d/m/Y", // Formato DD/MM/AAAA
+        locale: "es",
+        dateFormat: "d/m/Y",
         altInput: true,
         altFormat: "d/m/Y",
         allowInput: true,
         clickOpens: true,
-        position: "above", // Asegura que se muestre arriba si no cabe abajo
-        onChange: function (selectedDates, dateStr, instance) {
-          // Opcional: acción al cambiar fecha
-        }
+        position: "above"
       });
-    } else {
-      console.warn('No se encontró el campo #id_fecha');
     }
   });
 </script>
 
-<!-- Resto de tus scripts (vista previa, toggle password, submit, etc.) -->
+<!-- Resto de tus scripts -->
 <script>
   function vistaPreviaFoto(event) {
     const input = event.target;
@@ -232,133 +260,106 @@
       reader.readAsDataURL(input.files[0]);
     }
   }
-</script>
 
-<script>
-function togglePassword() {
-  const pwd = document.getElementById("id_password");
-  pwd.type = pwd.type === "password" ? "text" : "password";
-}
-</script>
+  function togglePassword() {
+    const pwd = document.getElementById("id_password");
+    pwd.type = pwd.type === "password" ? "text" : "password";
+  }
 
-<script>
-const baseInput = document.getElementById("id_sueldo_base");
-const comisionInput = document.getElementById("id_comision");
-const brutoInput = document.getElementById("id_sueldo_bruto");
-function calcularBruto() {
-  const base = parseFloat(baseInput.value) || 0;
-  const comision = parseFloat(comisionInput.value) || 0;
-  brutoInput.value = (base + comision).toFixed(2);
-}
-baseInput.addEventListener('input', calcularBruto);
-comisionInput.addEventListener('input', calcularBruto);
-</script>
+  const baseInput = document.getElementById("id_sueldo_base");
+  const comisionInput = document.getElementById("id_comision");
+  const brutoInput = document.getElementById("id_sueldo_bruto");
+  function calcularBruto() {
+    const base = parseFloat(baseInput.value) || 0;
+    const comision = parseFloat(comisionInput.value) || 0;
+    brutoInput.value = (base + comision).toFixed(2);
+  }
+  baseInput.addEventListener('input', calcularBruto);
+  comisionInput.addEventListener('input', calcularBruto);
 
-<script>
-document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const formData = new FormData(form);
-  const url = form.action || window.location.pathname;
+  document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const url = form.action || window.location.pathname;
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
-      },
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: data.message,
-        confirmButtonColor: '#28a745'
-      }).then(() => {
-        window.location.href = "{% url 'trabajadores:listar' %}";
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+        },
+        body: formData
       });
-    } else {
-      let html = '';
-      data.errors.forEach(err => {
-        html += `<div>• ${err}</div>`;
-      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: data.message,
+          confirmButtonColor: '#28a745'
+        }).then(() => {
+          window.location.href = "{% url 'trabajadores:listar' %}";
+        });
+      } else {
+        let html = '';
+        data.errors.forEach(err => {
+          html += `<div>• ${err}</div>`;
+        });
+        Swal.fire({
+          icon: 'error',
+          title: 'Errores de validación',
+          html: html,
+          confirmButtonColor: '#e74c3c'
+        });
+      }
+    } catch (error) {
       Swal.fire({
         icon: 'error',
-        title: 'Errores de validación',
-        html: html,
-        confirmButtonColor: '#e74c3c'
+        title: 'Error del servidor',
+        text: 'Ocurrió un error inesperado. Intenta nuevamente.'
       });
     }
-  } catch (error) {
+  });
+
+  function confirmarEliminar(event) {
+    event.preventDefault();
+    const trabajadorId = {{ trabajador.id }};
     Swal.fire({
-      icon: 'error',
-      title: 'Error del servidor',
-      text: 'Ocurrió un error inesperado. Intenta nuevamente.'
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`{% url 'trabajadores:eliminar' trabajador.id %}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Eliminado', data.message, 'success').then(() => {
+              window.location.href = "{% url 'trabajadores:listar' %}";
+            });
+          } else {
+            Swal.fire('Error', data.message || 'No se pudo eliminar', 'error');
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Ocurrió un error al eliminar', 'error');
+        });
+      }
     });
   }
-});
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const provinciaSelect = document.getElementById("id_provincia");
-    const ciudadSelect = document.getElementById("id_ciudad");
-    function filtrarCiudades() {
-      const provinciaId = provinciaSelect.value;
-      for (let option of ciudadSelect.options) {
-        if (!option.value) continue;
-        option.style.display = option.getAttribute("data-provincia") === provinciaId ? "block" : "none";
-      }
-      ciudadSelect.value = "";
-      ciudadSelect.dispatchEvent(new Event('change'));
-    }
-    provinciaSelect.addEventListener("change", filtrarCiudades);
-    filtrarCiudades();
-  });
-</script>
-
-<script>
-function confirmarEliminar(event) {
-  event.preventDefault();
-  const trabajadorId = {{ trabajador.id }};
-
-  Swal.fire({
-    title: '¿Estás seguro?',
-    text: "Esta acción no se puede deshacer.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch(`{% url 'trabajadores:eliminar' trabajador.id %}`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        },
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire('Eliminado', data.message, 'success').then(() => {
-            window.location.href = "{% url 'trabajadores:listar' %}";
-          });
-        } else {
-          Swal.fire('Error', data.message || 'No se pudo eliminar', 'error');
-        }
-      })
-      .catch(() => {
-        Swal.fire('Error', 'Ocurrió un error al eliminar', 'error');
-      });
-    }
-  });
-}
 </script>
 
 <style>

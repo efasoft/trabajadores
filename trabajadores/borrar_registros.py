@@ -20,7 +20,7 @@ try:
     cur = conn.cursor()
 
     # Paso 1: Obtener los IDs de los últimos 100 registros
-    cur.execute(f"SELECT {id_column} FROM {table_name} ORDER BY {id_column} DESC LIMIT 5000;")
+    cur.execute(f"SELECT {id_column} FROM {table_name} ORDER BY {id_column} DESC LIMIT 3000;")
     rows = cur.fetchall()
 
     if not rows:

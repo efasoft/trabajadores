@@ -86,33 +86,49 @@ class TrabajadorForm(forms.Form):
 
         # Inicializar valores si hay instancia
         if self.instance:
+            # 1. Asignar todos los campos directamente
             for field in self.fields:
                 if hasattr(self.instance, field):
                     value = getattr(self.instance, field)
                     if value is not None:
                         self.fields[field].initial = value
 
-            # ✅ Casos especiales: email, provincia, ciudad
+            # 2. Asignar email explícitamente (por si no se asignó)
             if self.instance.email:
                 self.fields['correo'].initial = self.instance.email
+
+            # 3. Asignar provincia y ciudad
             if self.instance.provincia:
                 self.fields['provincia'].initial = self.instance.provincia.id
             if self.instance.ciudad:
                 self.fields['ciudad'].initial = self.instance.ciudad.id
 
-        # Actualizar ciudades dinámicamente según provincia
+            # 4. Cargar opciones de provincia
+            self.fields['provincia'].widget.choices = [
+                (p.id, p.nombre) for p in Provincia.objects.all().order_by('nombre')
+            ]
+
+            # 5. Cargar ciudades de la provincia del modelo
+            if self.instance.provincia:
+                ciudades = Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
+                self.fields['ciudad'].widget.choices = [(c.id, c.nombre) for c in ciudades]
+                # Asegurar que la ciudad del modelo esté en choices
+                if self.instance.ciudad and self.instance.ciudad.id not in [c.id for c in ciudades]:
+                    self.fields['ciudad'].widget.choices.append((self.instance.ciudad.id, self.instance.ciudad.nombre))
+            else:
+                self.fields['ciudad'].widget.choices = []
+
+        # Actualizar ciudades dinámicamente si hay POST
         if 'provincia' in self.data:
             try:
                 provincia_id = int(self.data.get('provincia'))
-                self.fields['ciudad'].widget.choices = [
-                    (c.id, c.nombre) for c in Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
-                ]
+                ciudades = Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
+                self.fields['ciudad'].widget.choices = [(c.id, c.nombre) for c in ciudades]
             except (ValueError, TypeError):
                 self.fields['ciudad'].widget.choices = []
-        elif self.instance and self.instance.provincia:
-            self.fields['ciudad'].widget.choices = [
-                (c.id, c.nombre) for c in Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
-            ]
+
+        if self.instance.email:
+            self.fields['correo'].initial = self.instance.email                
 
     def clean(self):
         cleaned_data = super().clean()
@@ -157,6 +173,7 @@ class TrabajadorForm(forms.Form):
                     self.add_error("nombres", msg)
         except Exception as e:
             self.add_error(None, "Error en los datos ingresados. Revise todos los campos.")
+
 
         return cleaned_data
 
