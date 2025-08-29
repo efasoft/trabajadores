@@ -23,5 +23,6 @@ urlpatterns = [
     path("ciudades/crear/", views.crear_ciudad, name="crear_ciudad"),
     path("ciudades/editar/<int:id>/", views.editar_ciudad, name="editar_ciudad"),
     path("ciudades/eliminar/<int:id>/", views.eliminar_ciudad, name="eliminar_ciudad"),
+    path('api/ciudades/', views.api_ciudades, name='api_ciudades'),    
 
 ]

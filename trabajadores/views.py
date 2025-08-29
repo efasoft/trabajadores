@@ -22,6 +22,24 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+import json
+
+@csrf_exempt
+def api_ciudades(request):
+    if request.method == 'GET':
+        provincia_id = request.GET.get('provincia')
+        if provincia_id:
+            ciudades = Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
+            data = [{'id': c.id, 'nombre': c.nombre} for c in ciudades]
+            return JsonResponse(data, safe=False)
+        else:
+            return JsonResponse([], safe=False)
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+
 @login_required
 def home(request):
     trabajadores = Trabajador.objects.all()

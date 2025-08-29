@@ -228,6 +228,38 @@
   });
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const provinciaSelect = document.getElementById("id_provincia");
+    const ciudadSelect = document.getElementById("id_ciudad");
+
+    // Limpiar ciudad cuando cambia la provincia
+    provinciaSelect.addEventListener("change", function () {
+      if (this.value === "") {
+        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+      } else {
+        // Cargar ciudades de la provincia seleccionada
+        const provinciaId = this.value;
+        const ciudades = {{ ciudades|safe }};
+        
+        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+        ciudades.forEach(ciudad => {
+          if (ciudad.provincia_id == provinciaId) {
+            const option = document.createElement('option');
+            option.value = ciudad.id;
+            option.textContent = ciudad.nombre;
+            ciudadSelect.appendChild(option);
+          }
+        });
+      }
+    });
+
+    // Inicializar ciudades al cargar
+    provinciaSelect.dispatchEvent(new Event('change'));
+  });
+</script>
+
+
 <!-- FLATPICKR para fecha -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
