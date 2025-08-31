@@ -20,12 +20,12 @@ import csv
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
-
+import json
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
-import json
+
 
 @csrf_exempt
 def api_ciudades(request):
@@ -33,12 +33,12 @@ def api_ciudades(request):
         provincia_id = request.GET.get('provincia')
         if provincia_id:
             ciudades = Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
-            data = [{'id': c.id, 'nombre': c.nombre} for c in ciudades]
+            data = [{'id': c.id, 'nombre': c.nombre, 'provincia_id': c.provincia_id} for c in ciudades]
             return JsonResponse(data, safe=False)
         else:
             return JsonResponse([], safe=False)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
+
 
 @login_required
 def home(request):
@@ -78,11 +78,12 @@ def crear_trabajador(request):
             })
 
     form = TrabajadorForm()
+    ciudades_data = json.dumps(list(Ciudad.objects.all().values('id', 'nombre', 'provincia_id')))
     return render(request, 'trabajadores/form.html', {
         'form': form,
         'accion': 'Crear',
         'provincias': Provincia.objects.all(),
-        'ciudades': Ciudad.objects.all()
+        'ciudades_json': ciudades_data
     })
 
 
@@ -93,15 +94,12 @@ def editar_trabajador(request, trabajador_id):
     if request.method == 'POST':
         form = TrabajadorForm(request.POST, request.FILES, instance=trabajador)
         if form.is_valid():
-            print("¿Tiene save?", hasattr(form, 'save'))
-            print("Métodos:", [m for m in dir(form) if 'save' in m])            
-            form.save()  # ✅ Ahora debería funcionar
+            form.save()
             return JsonResponse({
                 'success': True,
                 'message': 'Trabajador actualizado correctamente.'
             })
         else:
-            print("Errores del formulario:", form.errors)  # 🔍 Depuración            
             errors = []
             for field in form:
                 for error in field.errors:
@@ -112,12 +110,13 @@ def editar_trabajador(request, trabajador_id):
             })
 
     form = TrabajadorForm(instance=trabajador)
+    ciudades_data = json.dumps(list(Ciudad.objects.all().values('id', 'nombre', 'provincia_id')))
     return render(request, 'trabajadores/form.html', {
         'form': form,
         'accion': 'Editar',
         'trabajador': trabajador,
         'provincias': Provincia.objects.all(),
-        'ciudades': Ciudad.objects.all()  # ✅ Necesario para el script
+        'ciudades_json': ciudades_data
     })
 
 
@@ -141,7 +140,6 @@ def eliminar_trabajador(request, trabajador_id):
 @login_required
 def exportar_excel(request):
     filtro = request.GET.get('q', '').lower()
-
     trabajadores = Trabajador.objects.all()
     if filtro:
         trabajadores = trabajadores.filter(

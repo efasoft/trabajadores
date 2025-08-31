@@ -195,10 +195,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-<!-- CHOICES.JS (Selects modernos) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-
 <!-- FLATPICKR para fecha -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -217,17 +213,33 @@
   });
 </script>
 
+<!-- CHOICES.JS (LOCAL) -->
+<link rel="stylesheet" href="{% static 'css/choices.min.css' %}">
+<script src="{% static 'js/choices.min.js' %}"></script>
+
+<!-- Datos de ciudades en JSON -->
+<script id="ciudades-data" type="application/json">
+    {{ ciudades_json|safe }}
+</script>
+
 <!-- CHOICES.JS para Provincia y Ciudad -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Inicializar Choices.js
+    if (typeof Choices === 'undefined') {
+      console.error('ERROR: Choices.js no se cargó correctamente');
+      return;
+    }
+
+    const ciudadesData = JSON.parse(document.getElementById('ciudades-data').textContent);
+
     const provinciaSelect = new Choices('#id_provincia', {
       searchEnabled: true,
       searchPlaceholderValue: 'Buscar provincia...',
       itemSelectText: '',
       shouldSort: false,
-      placeholder: true,
-      position: 'bottom'
+      placeholderValue: 'Seleccione una provincia',
+      position: 'bottom',
+      allowHTML: true
     });
 
     const ciudadSelect = new Choices('#id_ciudad', {
@@ -235,40 +247,35 @@
       searchPlaceholderValue: 'Buscar ciudad...',
       itemSelectText: '',
       shouldSort: false,
-      placeholder: true,
-      position: 'bottom'
+      placeholderValue: 'Seleccione una ciudad',
+      position: 'bottom',
+      allowHTML: true
     });
 
-    // Actualizar ciudades cuando cambia la provincia
-    document.getElementById('id_provincia').addEventListener('change', function () {
-      const provinciaId = this.value;
-      const opciones = document.querySelectorAll('#id_ciudad option[data-provincia]');
-      
-      // Limpiar ciudades
-      ciudadSelect.clearChoices();
+    function cargarCiudades() {
+      const provinciaId = document.getElementById('id_provincia').value;
+      ciudadSelect.clearStore();
       ciudadSelect.setChoice('Seleccione una ciudad', '', true);
 
-      // Filtrar y añadir ciudades
-      opciones.forEach(option => {
-        if (option.dataset.provincia === provinciaId) {
-          ciudadSelect.setChoice(option.textContent, option.value);
+      if (!provinciaId) return;
+
+      ciudadesData.forEach(ciudad => {
+        if (ciudad.provincia_id == provinciaId) {
+          ciudadSelect.setChoice(ciudad.nombre, ciudad.id);
         }
       });
 
-      // Limpiar selección
-      ciudadSelect.setChoiceByValue('');
-    });
-
-    // Inicializar ciudades al cargar
-    document.getElementById('id_provincia').dispatchEvent(new Event('change'));
-
-    // Restaurar ciudad si existe
-    const ciudadInicial = "{{ form.ciudad.value }}";
-    if (ciudadInicial) {
-      setTimeout(() => {
-        ciudadSelect.setChoiceByValue(ciudadInicial);
-      }, 150);
+      const ciudadInicial = "{{ form.ciudad.value }}";
+      if (ciudadInicial) {
+        setTimeout(() => {
+          ciudadSelect.setChoiceByValue(ciudadInicial);
+        }, 150);
+      }
     }
+
+    document.getElementById('id_provincia').addEventListener('change', cargarCiudades);
+    cargarCiudades();
+    console.log('YA cargo la CIUDAD cuando cambio la PROVINCIA');
   });
 </script>
 
@@ -391,31 +398,66 @@
 
 <!-- ESTILOS MODERNOS PARA CHOICES.JS -->
 <style>
+  .choices__input {
+    font-size: 1rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 12px;
+    background-color: white;
+    color: #495057;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    appearance: none;
+    background-image: url("image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em;
+    padding-right: 2.5rem !important;
+  }
+
+  .choices__input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    outline: 0;
+  }
+
   .choices__list--dropdown {
-    border-radius: 12px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+    border: 1px solid #e0e0e0;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    margin-top: 6px;
+  }
+
+  .choices__item--selectable {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #212529;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
   }
 
   .choices__item--selectable:hover {
-    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    background: linear-gradient(135deg, rgb(48, 74, 116), #60a5fa);
     color: white;
+    transform: translateY(-1px);
     font-weight: 500;
   }
 
-  .choices__list[aria-expanded="true"] {
-    border-color: #3b82f6 !important;
-  }
-
-  .choices__input {
-    font-size: 0.95rem;
+  .choices__item--selected {
+    background: linear-gradient(135deg, #4a90e2, #50c878);
+    color: white;
+    font-weight: 600;
   }
 
   .choices__placeholder {
-    color: #9ca3af;
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  .choices__list--dropdown, .choices__input {
+    transition: all 0.3s ease;
   }
 </style>
 {% endblock %}
-
-
 
