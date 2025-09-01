@@ -213,7 +213,7 @@
   });
 </script>
 
-<!-- CHOICES.JS (LOCAL) -->
+<!-- CHOICES.JS (CDN) - Evita errores 404 -->
 <link rel="stylesheet" href="{% static 'css/choices.min.css' %}">
 <script src="{% static 'js/choices.min.js' %}"></script>
 
@@ -255,27 +255,32 @@
     function cargarCiudades() {
       const provinciaId = document.getElementById('id_provincia').value;
       ciudadSelect.clearStore();
-      ciudadSelect.setChoice('Seleccione una ciudad', '', true);
+      ciudadSelect.setChoices([{ value: '', label: 'Seleccione una ciudad', disabled: false }], 'value', 'label', false);
 
       if (!provinciaId) return;
 
-      ciudadesData.forEach(ciudad => {
-        if (ciudad.provincia_id == provinciaId) {
-          ciudadSelect.setChoice(ciudad.nombre, ciudad.id);
-        }
-      });
+      const opciones = ciudadesData
+        .filter(ciudad => ciudad.provincia_id == provinciaId)
+        .map(ciudad => ({ value: ciudad.id, label: ciudad.nombre }));
 
+      ciudadSelect.setChoices(opciones, 'value', 'label', false);
+
+      // Buscar ciudad inicial
       const ciudadInicial = "{{ form.ciudad.value }}";
       if (ciudadInicial) {
         setTimeout(() => {
-          ciudadSelect.setChoiceByValue(ciudadInicial);
+          const opcion = ciudadSelect._choices.find(c => c.value == ciudadInicial);
+          if (opcion) {
+            ciudadSelect.setChoiceByValue(ciudadInicial);
+          }
         }, 150);
       }
+
+      console.log('YA cargo la CIUDAD cuando cambio la PROVINCIA');
     }
 
     document.getElementById('id_provincia').addEventListener('change', cargarCiudades);
     cargarCiudades();
-    console.log('YA cargo la CIUDAD cuando cambio la PROVINCIA');
   });
 </script>
 
@@ -398,12 +403,26 @@
 
 <!-- ESTILOS MODERNOS PARA CHOICES.JS -->
 <style>
+  .choices div {
+    background-color: #ffffff);
+    padding: 0.375rem 0.75rem;  
+    border-radius: 8px;  
+    appearance: none;    
+    outline: 0;  
+  }
+
+  .choices div:hover {
+    background-color: #ffffff);
+  }  
+
+
+  /* Input principal - fondo blanco, borde gris */
   .choices__input {
     font-size: 1rem;
     padding: 0.375rem 0.75rem;
     border: 1px solid #ced4da;
-    border-radius: 12px;
-    background-color: white;
+    border-radius: 8px;
+    background-color: white !important; /* Fondo blanco */
     color: #495057;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     appearance: none;
@@ -415,11 +434,13 @@
   }
 
   .choices__input:focus {
+
     border-color: #4a90e2;
     box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
     outline: 0;
   }
 
+  /* Menú desplegable con fondo degradado */
   .choices__list--dropdown {
     border-radius: 16px !important;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
@@ -429,6 +450,7 @@
     margin-top: 6px;
   }
 
+  /* Opciones del menú */
   .choices__item--selectable {
     padding: 10px 16px;
     font-size: 0.95rem;
@@ -437,6 +459,7 @@
     border-bottom: 1px solid #f0f0f0;
   }
 
+  /* Hover con gradiente */
   .choices__item--selectable:hover {
     background: linear-gradient(135deg, rgb(48, 74, 116), #60a5fa);
     color: white;
@@ -444,17 +467,20 @@
     font-weight: 500;
   }
 
+  /* Opción seleccionada */
   .choices__item--selected {
     background: linear-gradient(135deg, #4a90e2, #50c878);
     color: white;
     font-weight: 600;
   }
 
+  /* Placeholder */
   .choices__placeholder {
     color: #6c757d;
     font-style: italic;
   }
 
+  /* Animaciones suaves */
   .choices__list--dropdown, .choices__input {
     transition: all 0.3s ease;
   }
