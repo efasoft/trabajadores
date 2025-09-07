@@ -8,12 +8,12 @@
         <div class="card-body px-5 py-4">
 
           <!-- CABECERA CON ICONOS -->
-          <div class="card-header-p bg-light fw-bold mb-4 d-flex justify-content-between align-items-center">
+          <div class="card-header-p fw-bold mb-4 d-flex justify-content-between align-items-center">
             TRABAJADORES
             <div>
               {% if accion == "Editar" %}
-                <a href="#" class="btn btn-sm me-2" title="Eliminar"> 
-                  <i class="fa fa-trash"
+                <a href="#"  class="btn btn-sm" title="Eliminar"> 
+                  <i class="fa fa-trash icon-btn"
                   onclick="confirmarEliminar(event)"
                   data-bs-toggle="tooltip"
                   title="Eliminar" >    
@@ -21,9 +21,9 @@
                 </a>
               {% endif %}
               <a href="{% url 'trabajadores:listar' %}" class="btn btn-sm" title="Salir">
-                <i class="fa fa-arrow-right"
+                <i class="fa fa-arrow-right icon-btn"
                     data-bs-toggle="tooltip"
-                    title="Ver Lista de Trabajadores"                     
+                    title="Salir del Formulario"                     
                 ></i>
               </a>
             </div>
@@ -557,6 +557,19 @@
   .choices__list--dropdown, .choices__input {
     transition: all 0.3s ease;
   }
+
+  .card-header {
+    border-left: 4px solid #8a8a8a;
+    border-radius: 8px;     
+  }
+
+  .card-header-p {
+    background-color: #F8F9FA;
+    font-size: 1.45rem;    
+  }
+
+
 </style>
+
 {% endblock %}
 
