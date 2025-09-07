@@ -444,7 +444,7 @@ def crear_provincia(request):
 def editar_provincia(request, id):
     provincia = get_object_or_404(Provincia, id=id)
     if request.method == "POST":
-        form = ProvinciaForm(request.POST, instance=provincia)
+        form = ProvinciaForm(request.POST, request.FILES, instance=provincia)
         if form.is_valid():
             form.save()
             return JsonResponse({"success": True, "message": "Provincia actualizada con éxito"})

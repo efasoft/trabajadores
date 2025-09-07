@@ -14,11 +14,12 @@
               {% if accion == "Editar" %}
                 <a href="#"  class="btn btn-sm" title="Eliminar"> 
                   <i class="fa fa-trash icon-btn"
-                  onclick="confirmarEliminar(event)"
+                  onclick="confirmarEliminar({{ trabajador.id }})"
                   data-bs-toggle="tooltip"
                   title="Eliminar" >    
                   </i>             
                 </a>
+
               {% endif %}
               <a href="{% url 'trabajadores:listar' %}" class="btn btn-sm" title="Salir">
                 <i class="fa fa-arrow-right icon-btn"
@@ -442,10 +443,7 @@
     }
   });
 
-  function confirmarEliminar(event) {
-    event.preventDefault();
-    const trabajadorId = {{ trabajador.id|default:0 }};
-
+  function confirmarEliminar(trabajadorId) {
     Swal.fire({
       title: '¿Estás seguro?',
       text: "Esta acción no se puede deshacer.",
@@ -457,25 +455,8 @@
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`{% url 'trabajadores:eliminar' trabajador.id|default:0 %}`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-          },
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            Swal.fire('Eliminado', data.message, 'success').then(() => {
-              window.location.href = "{% url 'trabajadores:listar' %}";
-            });
-          } else {
-            Swal.fire('Error', data.message || 'No se pudo eliminar', 'error');
-          }
-        })
-        .catch(() => {
-          Swal.fire('Error', 'Ocurrió un error al eliminar', 'error');
-        });
+        // Redirigir directamente a la URL de eliminar (GET request que maneja Django)
+        window.location.href = `/eliminar/${trabajadorId}/`;      
       }
     });
   }

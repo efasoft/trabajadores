@@ -1,83 +1,245 @@
 {% extends 'base.html' %}
+{% load humanize %} <!-- Para formatear numeros -->
 {% block title %}Lista de Provincias{% endblock %}
 
 {% block content %}
-<style>
-.page-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 1rem; }
-.card-provincia {
-  display: flex; padding: 0.6rem 1rem;
-  background: white; border-left: 4px solid #17a2b8;
-  margin-bottom: 0.5rem; border-radius: 0.4rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.card-provincia:hover { background: #f7f7f7; }
-.col-nombre { flex: 1; }
-.acciones { display: flex; gap: 0.6rem; }
-.fa-edit { color: #17a2b8; cursor:pointer; }
-.fa-trash { color: #dc3545; cursor:pointer; }
-</style>
 
-<div class="card p-3">
+<div class="card">
   <div class="d-flex justify-content-between align-items-center">
     <h3 class="page-title">Relación de Provincias</h3>
-    <a href="{% url 'trabajadores:crear_provincia' %}" class="icon-btn" data-bs-toggle="tooltip" title="Agregar nuevo provincia">
-      <i class="fas fa-map-plus text-success mb-3"></i> 
-    </a>
-
   </div>
 
-  <input type="text" id="searchInput" class="form-control my-3" placeholder="Buscar por nombre...">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <input
+      type="text"
+      id="searchInput"
+      class="form-control search-box"
+      placeholder="Buscar por nombre..."
+    />
+    <div class="search-actions">
+      <a
+        href="{% url 'trabajadores:crear_provincia' %}"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Agregar nueva Provincia"
+      >
+        <i class="fas fa-user-plus"></i>
+      </a>
+      <a
+        id="confirmExportExcel"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Exportar a Excel"
+      >
+        <i class="fas fa-file-excel"></i>
+      </a>
+      <a
+        id="btnExportPDF"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Exportar a PDF"
+      >
+        <i class="fas fa-file-pdf"></i>
+      </a>
+
+      <a
+        href="{% url 'home' %}"
+        class="icon-btn"
+        data-bs-toggle="tooltip"
+        title="Salir"           
+      >
+        <i class="fa fa-arrow-right"></i>
+      </a>
+
+    </div>
+  </div>
 
   <div class="header-row fw-bold mb-2">Nombre</div>
 
-  <div id="provinciasContainer">
+  <div id="listadatosContainer">
     {% for p in provincias %}
-    <div class="card-provincia" data-nombre="{{ p.nombre|lower }}">
+    <div
+      class="card-lineadedatos"
+      data-nombre="{{ p.nombre|lower }}"
+    >
       <div class="col-nombre">{{ p.nombre }}</div>
-      <div class="acciones ms-auto">
-        <a href="{% url 'trabajadores:editar_provincia' p.id %}" title="Editar"><i class="fas fa-edit"></i></a>
-        <i class="fas fa-trash" onclick="confirmDel({{ p.id }})" title="Eliminar"></i>
+
+      <div class="acciones">
+        <a
+          href="{% url 'trabajadores:editar_provincia' p.id %}"
+          data-bs-toggle="tooltip"
+          title="Editar"
+          ><i class="fas fa-edit"></i
+        ></a>
+        <i
+          class="fas fa-trash"
+          onclick="confirmDel({{ p.id }})"
+          data-bs-toggle="tooltip"
+          title="Eliminar"
+        ></i>
       </div>
     </div>
     {% endfor %}
   </div>
 
-  <div class="mt-2 text-muted small">
-    Total registros: <span id="totalRegistros">{{ provincias|length }}</span>
+  <div class="footer-container">
+    <div class="pagination" id="paginacion"></div>
+    <div class="footer-info">
+      {% if not request.GET.q %} Total registros:
+      <span id="totalRegistros">{{ total|intcomma }}</span> {% else %} Vamos:
+      <span id="totalRegistros">{{ provincias|length|intcomma }}</span>
+      {% endif %}
+    </div>
   </div>
 </div>
 
 <script>
-function confirmDel(id) {
-  Swal.fire({
-    title:'¿Eliminar provincia?',
-    text:'Esta acción no se puede deshacer',
-    icon:'warning',
-    showCancelButton:true,
-    confirmButtonText:'Sí, eliminar',
-    cancelButtonText:'Cancelar'
-  }).then(r => { if (r.isConfirmed) window.location.href = '/provincias/eliminar/' + id + '/'; });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("searchInput");
-  const container = document.getElementById("provinciasContainer");
-  const totalRegistros = document.getElementById("totalRegistros");
-  const elementos = Array.from(container.children);
-
-  function actualizarVista() {
-    const query = searchInput.value.toLowerCase();
-    let visibles = 0;
-    elementos.forEach(el => {
-      if (el.dataset.nombre.includes(query)) { el.style.display = "flex"; visibles++; }
-      else { el.style.display = "none"; }
-    });
-    totalRegistros.textContent = visibles;
+  function confirmDel(id) {
+    Swal.fire({
+      title:'¿Eliminar provincia?',
+      text:'Esta acción no se puede deshacer',
+      icon:'warning',
+      showCancelButton:true,
+      confirmButtonText:'Sí, eliminar',
+      cancelButtonText:'Cancelar'
+    }).then(r => { if (r.isConfirmed) window.location.href = '/provincias/eliminar/' + id + '/'; });
   }
 
-  searchInput.addEventListener("input", actualizarVista);
-});
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("searchInput");
+    const container = document.getElementById("listadatosContainer");
+    const paginacion = document.getElementById("paginacion");
+    const totalRegistros = document.getElementById("totalRegistros");
+    const elementos = Array.from(container.children);
+    const totalOriginal = elementos.length;
+    const porPagina = 10;
+    let paginaActual = 1;
+    let scrollTimeout;
+
+    function filtrar() {
+      const query = searchInput.value.toLowerCase();
+      return elementos.filter(
+        (el) =>
+          el.dataset.nombre.includes(query) 
+      );
+    }
+
+    function renderPaginacion(items) {
+      paginacion.innerHTML = "";
+      const total = Math.ceil(items.length / porPagina);
+      const maxVisible = 5;
+      let start = Math.max(1, paginaActual - Math.floor(maxVisible / 2));
+      let end = Math.min(total, start + maxVisible - 1);
+
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+
+      if (paginaActual > 1) {
+        paginacion.innerHTML += `<button onclick="cambiarPagina(1)"><i class="fas fa-angle-double-left"></i></button>`;
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${
+          paginaActual - 1
+        })"><i class="fas fa-angle-left"></i></button>`;
+      }
+
+      for (let i = start; i <= end; i++) {
+        paginacion.innerHTML += `<button class="${
+          i === paginaActual ? "active" : ""
+        }" onclick="cambiarPagina(${i})">${i}</button>`;
+      }
+
+      if (paginaActual < total) {
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${
+          paginaActual + 1
+        })"><i class="fas fa-angle-right"></i></button>`;
+        paginacion.innerHTML += `<button onclick="cambiarPagina(${total})"><i class="fas fa-angle-double-right"></i></button>`;
+      }
+    }
+
+    window.cambiarPagina = function (num) {
+      paginaActual = num;
+      const scrollY =
+        (paginaActual - 1) *
+        porPagina *
+        (container.firstElementChild?.offsetHeight || 30);
+      container.scrollTop = scrollY;
+      renderPaginacion(filtrar());
+    };
+
+    function actualizarVista() {
+      const filtrados = filtrar();
+      container.innerHTML = "";
+      filtrados.forEach((el) => container.appendChild(el));
+      totalRegistros.textContent = `${filtrados.length.toLocaleString(
+        "es-ES"
+      )} de ${totalOriginal.toLocaleString("es-ES")}`;
+      renderPaginacion(filtrados);
+    }
+
+    // Sincronizar número de página con scroll
+    container.addEventListener("scroll", () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollTop = container.scrollTop;
+        const filaAltura = container.firstElementChild
+          ? container.firstElementChild.offsetHeight
+          : 30;
+        const nuevaPagina =
+          Math.floor(scrollTop / (filaAltura * porPagina)) + 1;
+        if (nuevaPagina !== paginaActual) {
+          paginaActual = nuevaPagina;
+          renderPaginacion(filtrar());
+        }
+      }, 100);
+    });
+
+    searchInput.addEventListener("input", () => {
+      paginaActual = 1;
+      actualizarVista();
+    });
+
+    actualizarVista();
+  });
 </script>
+
+<script>
+  document
+    .getElementById("btnExportPDF")
+    .addEventListener("click", function () {
+      const filtro = document.getElementById("searchInput").value;
+      Swal.fire({
+        title: "¿Desea ver reporte_trabajadores.pdf?",
+        showCancelButton: true,
+        confirmButtonText: "Ver ahora",
+        cancelButtonText: "Descargar",
+        icon: "question",
+      }).then((result) => {
+        const url = `/exportar/pdf/?q=${encodeURIComponent(filtro)}&descargar=${
+          result.isConfirmed ? 0 : 1
+        }`;
+        window.open(url, "_blank");
+      });
+    });
+
+  document
+    .getElementById("confirmExportExcel")
+    .addEventListener("click", function () {
+      const filtro = document.getElementById("searchInput").value;
+      Swal.fire({
+        title: "¿Desea ver el archivo Excel?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, mostrar",
+        cancelButtonText: "No, descargar",
+      }).then((result) => {
+        const url = `/exportar/excel/?q=${encodeURIComponent(
+          filtro
+        )}&descargar=${result.isConfirmed ? 0 : 1}`;
+        window.open(url, "_blank");
+      });
+    });
+</script>
+
 {% endblock %}
 
 
