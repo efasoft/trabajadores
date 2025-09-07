@@ -86,10 +86,12 @@
                     <label for="id_ciudad" class="form-label">Ciudad</label>
                     <select name="ciudad" id="id_ciudad" class="form-select">
                       <option value="">Seleccione una ciudad</option>
-                      {% if ciudades %}
-                        {% for c in ciudades %}
-                          <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}" {% if form.ciudad.value == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-                        {% endfor %}
+                      {% for c in ciudades %}
+                        <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}" {% if form.ciudad.value == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                      {% endfor %}
+                      <!-- Añadir la ciudad del trabajador si no está en la lista -->
+                      {% if ciudad_en_lista == False and trabajador.ciudad %}
+                        <option value="{{ trabajador.ciudad.id }}" selected>{{ trabajador.ciudad.nombre }}</option>
                       {% endif %}
                     </select>
                   </div>
@@ -225,12 +227,20 @@
 <!-- CHOICES.JS para Provincia y Ciudad -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    console.log("=== DEBUG: DOMContentLoaded ===");
+
     if (typeof Choices === 'undefined') {
       console.error('ERROR: Choices.js no se cargó correctamente');
       return;
     }
 
     const ciudadesData = JSON.parse(document.getElementById('ciudades-data').textContent);
+    const ciudadInicial = "{{ ciudad_inicial }}";
+    const provinciaInicial = "{{ provincia_inicial }}";
+
+    console.log("Provincia Inicial:", provinciaInicial);
+    console.log("Ciudad Inicial:", ciudadInicial);
+    console.log("Datos de ciudades cargados:", ciudadesData.length);
 
     const provinciaSelect = new Choices('#id_provincia', {
       searchEnabled: true,
@@ -252,8 +262,8 @@
       allowHTML: true
     });
 
-    function cargarCiudades() {
-      const provinciaId = document.getElementById('id_provincia').value;
+    function cargarCiudades(provinciaId) {
+      console.log("Cargando ciudades para provincia:", provinciaId);
       ciudadSelect.clearStore();
       ciudadSelect.setChoices([{ value: '', label: 'Seleccione una ciudad', disabled: false }], 'value', 'label', false);
 
@@ -263,24 +273,46 @@
         .filter(ciudad => ciudad.provincia_id == provinciaId)
         .map(ciudad => ({ value: ciudad.id, label: ciudad.nombre }));
 
+      // Asegurar que la ciudad inicial esté en las opciones
+      if (ciudadInicial) {
+        const ciudadObj = ciudadesData.find(c => c.id == ciudadInicial);
+        if (ciudadObj && ciudadObj.provincia_id == provinciaId) {
+          const yaExiste = opciones.some(o => o.value == ciudadInicial);
+          if (!yaExiste) {
+            opciones.push({ value: ciudadObj.id, label: ciudadObj.nombre });
+            console.log("✅ Ciudad inicial añadida a opciones:", ciudadObj);
+          }
+        }
+      }
+
       ciudadSelect.setChoices(opciones, 'value', 'label', false);
 
-      // Buscar ciudad inicial
-      const ciudadInicial = "{{ form.ciudad.value }}";
-      if (ciudadInicial) {
-        setTimeout(() => {
+      // Forzar selección después de establecer opciones
+      setTimeout(() => {
+        if (ciudadInicial) {
           const opcion = ciudadSelect._choices.find(c => c.value == ciudadInicial);
           if (opcion) {
             ciudadSelect.setChoiceByValue(ciudadInicial);
+            console.log("✅ Ciudad seleccionada correctamente:", ciudadInicial);
+          } else {
+            console.warn("⚠️ Opción no encontrada en _choices:", ciudadInicial);
           }
-        }, 150);
-      }
-
-      console.log('YA cargo la CIUDAD cuando cambio la PROVINCIA');
+        }
+      }, 100);
     }
 
-    document.getElementById('id_provincia').addEventListener('change', cargarCiudades);
-    cargarCiudades();
+    document.getElementById('id_provincia').addEventListener('change', function(e) {
+      console.log("Provincia cambiada a:", e.target.value);
+      cargarCiudades(e.target.value);
+    });
+
+    // Cargar ciudades iniciales
+    if (provinciaInicial) {
+      document.getElementById('id_provincia').value = provinciaInicial;
+      cargarCiudades(provinciaInicial);
+    } else {
+      cargarCiudades(null);
+    }
   });
 </script>
 
@@ -403,18 +435,12 @@
 
 <!-- ESTILOS MODERNOS PARA CHOICES.JS -->
 <style>
-  .choices div {
-    background-color: #ffffff);
-    padding: 0.375rem 0.75rem;  
+
+  .choices div{
+    background-color: white !important; /* Fondo blanco */
     border-radius: 8px;  
-    appearance: none;    
-    outline: 0;  
-  }
-
-  .choices div:hover {
-    background-color: #ffffff);
-  }  
-
+    padding:  0.15rem;   
+  } 
 
   /* Input principal - fondo blanco, borde gris */
   .choices__input {
@@ -434,9 +460,9 @@
   }
 
   .choices__input:focus {
-
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    padding: 1.375rem 1.75rem;    
+    border-color:rgb(53, 182, 233);
+    box-shadow: 10px 18px 25px rgba(0, 0, 0, 0.18);
     outline: 0;
   }
 

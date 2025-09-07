@@ -110,13 +110,35 @@ def editar_trabajador(request, trabajador_id):
             })
 
     form = TrabajadorForm(instance=trabajador)
-    ciudades_data = json.dumps(list(Ciudad.objects.all().values('id', 'nombre', 'provincia_id')))
+
+    # 🔍 Depuración: Verificar valores del trabajador
+    print("=== DEBUG editar_trabajador ===")
+    print("Trabajador:", trabajador.id)
+    print("Provincia:", trabajador.provincia.id if trabajador.provincia else None)
+    print("Ciudad:", trabajador.ciudad.id if trabajador.ciudad else None)
+    print("Nombre Ciudad:", trabajador.ciudad.nombre if trabajador.ciudad else None)
+
+    # ✅ Obtener el valor de ciudad desde el modelo
+    ciudad_id = trabajador.ciudad.id if trabajador.ciudad else None
+    provincia_id = trabajador.provincia.id if trabajador.provincia else None
+
+    # ✅ Obtener todas las ciudades
+    ciudades = Ciudad.objects.all()
+    ciudades_data = json.dumps(list(ciudades.values('id', 'nombre', 'provincia_id')))
+    
+    # ✅ Verificar si la ciudad del trabajador está en la lista de ciudades
+    ciudad_en_lista = bool(ciudad_id and ciudades.filter(id=ciudad_id).exists())
+
     return render(request, 'trabajadores/form.html', {
         'form': form,
         'accion': 'Editar',
         'trabajador': trabajador,
         'provincias': Provincia.objects.all(),
-        'ciudades_json': ciudades_data
+        'ciudades': ciudades,
+        'ciudades_json': ciudades_data,
+        'ciudad_en_lista': ciudad_en_lista,
+        'ciudad_inicial': ciudad_id,  # Nueva variable para usar en JS si es necesario
+        'provincia_inicial': provincia_id,
     })
 
 
