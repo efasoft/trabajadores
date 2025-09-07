@@ -118,28 +118,36 @@ def editar_trabajador(request, trabajador_id):
     print("Ciudad:", trabajador.ciudad.id if trabajador.ciudad else None)
     print("Nombre Ciudad:", trabajador.ciudad.nombre if trabajador.ciudad else None)
 
-    # ✅ Obtener el valor de ciudad desde el modelo
+    # ===== CORRECCIÓN: OBTENER VALORES CORRECTOS =====
     ciudad_id = trabajador.ciudad.id if trabajador.ciudad else None
     provincia_id = trabajador.provincia.id if trabajador.provincia else None
 
-    # ✅ Obtener todas las ciudades
-    ciudades = Ciudad.objects.all()
+    # ===== CORRECCIÓN: OBTENER TODAS LAS CIUDADES CORRECTAMENTE =====
+    ciudades = Ciudad.objects.select_related('provincia').all()
     ciudades_data = json.dumps(list(ciudades.values('id', 'nombre', 'provincia_id')))
     
-    # ✅ Verificar si la ciudad del trabajador está en la lista de ciudades
+    # ===== VERIFICACIÓN ADICIONAL =====
     ciudad_en_lista = bool(ciudad_id and ciudades.filter(id=ciudad_id).exists())
-
-    return render(request, 'trabajadores/form.html', {
+    
+    # ===== CORRECCIÓN: ASEGURAR QUE LOS VALORES ESTÁN DISPONIBLES EN EL CONTEXTO =====
+    context = {
         'form': form,
         'accion': 'Editar',
         'trabajador': trabajador,
-        'provincias': Provincia.objects.all(),
+        'provincias': Provincia.objects.all().order_by('nombre'),
         'ciudades': ciudades,
         'ciudades_json': ciudades_data,
         'ciudad_en_lista': ciudad_en_lista,
-        'ciudad_inicial': ciudad_id,  # Nueva variable para usar en JS si es necesario
-        'provincia_inicial': provincia_id,
-    })
+        'ciudad_inicial': ciudad_id,  # ← Valor para JavaScript
+        'provincia_inicial': provincia_id,  # ← Valor para JavaScript
+    }
+    
+    # ===== DEBUG ADICIONAL =====
+    print(f"Ciudad inicial enviada al template: {ciudad_id}")
+    print(f"Provincia inicial enviada al template: {provincia_id}")
+    print(f"Total de ciudades disponibles: {ciudades.count()}")
+    
+    return render(request, 'trabajadores/form.html', context)
 
 
 @login_required

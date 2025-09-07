@@ -86,13 +86,7 @@
                     <label for="id_ciudad" class="form-label">Ciudad</label>
                     <select name="ciudad" id="id_ciudad" class="form-select">
                       <option value="">Seleccione una ciudad</option>
-                      {% for c in ciudades %}
-                        <option value="{{ c.id }}" data-provincia="{{ c.provincia_id }}" {% if form.ciudad.value == c.id %}selected{% endif %}>{{ c.nombre }}</option>
-                      {% endfor %}
-                      <!-- Añadir la ciudad del trabajador si no está en la lista -->
-                      {% if ciudad_en_lista == False and trabajador.ciudad %}
-                        <option value="{{ trabajador.ciudad.id }}" selected>{{ trabajador.ciudad.nombre }}</option>
-                      {% endif %}
+                      <!-- Las ciudades se cargarán dinámicamente -->
                     </select>
                   </div>
                   <div class="col-md-4">
@@ -224,24 +218,29 @@
     {{ ciudades_json|safe }}
 </script>
 
-<!-- CHOICES.JS para Provincia y Ciudad -->
+<!-- ===== CORRECCIÓN PRINCIPAL: JavaScript para Provincia y Ciudad ===== -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     console.log("=== DEBUG: DOMContentLoaded ===");
 
+    // Verificar si Choices.js está disponible
     if (typeof Choices === 'undefined') {
       console.error('ERROR: Choices.js no se cargó correctamente');
+      // Fallback con JavaScript vanilla
+      initVanillaSelects();
       return;
     }
 
+    // Obtener datos
     const ciudadesData = JSON.parse(document.getElementById('ciudades-data').textContent);
-    const ciudadInicial = "{{ ciudad_inicial }}";
-    const provinciaInicial = "{{ provincia_inicial }}";
+    const ciudadInicial = "{{ ciudad_inicial|default:'' }}";
+    const provinciaInicial = "{{ provincia_inicial|default:'' }}";
 
     console.log("Provincia Inicial:", provinciaInicial);
     console.log("Ciudad Inicial:", ciudadInicial);
     console.log("Datos de ciudades cargados:", ciudadesData.length);
 
+    // Inicializar Choices.js
     const provinciaSelect = new Choices('#id_provincia', {
       searchEnabled: true,
       searchPlaceholderValue: 'Buscar provincia...',
@@ -262,61 +261,110 @@
       allowHTML: true
     });
 
+    // Función para cargar ciudades
     function cargarCiudades(provinciaId) {
-      console.log("Cargando ciudades para provincia:", provinciaId);
+      console.log("=== Cargando ciudades para provincia:", provinciaId, "===");
+      
+      // Limpiar opciones actuales
       ciudadSelect.clearStore();
-      ciudadSelect.setChoices([{ value: '', label: 'Seleccione una ciudad', disabled: false }], 'value', 'label', false);
+      ciudadSelect.setChoices([{ value: '', label: 'Seleccione una ciudad', disabled: false }], 'value', 'label', true);
 
-      if (!provinciaId) return;
-
-      const opciones = ciudadesData
-        .filter(ciudad => ciudad.provincia_id == provinciaId)
-        .map(ciudad => ({ value: ciudad.id, label: ciudad.nombre }));
-
-      // Asegurar que la ciudad inicial esté en las opciones
-      if (ciudadInicial) {
-        const ciudadObj = ciudadesData.find(c => c.id == ciudadInicial);
-        if (ciudadObj && ciudadObj.provincia_id == provinciaId) {
-          const yaExiste = opciones.some(o => o.value == ciudadInicial);
-          if (!yaExiste) {
-            opciones.push({ value: ciudadObj.id, label: ciudadObj.nombre });
-            console.log("✅ Ciudad inicial añadida a opciones:", ciudadObj);
-          }
-        }
+      if (!provinciaId || provinciaId === '') {
+        console.log("No hay provincia seleccionada, limpiando ciudades");
+        return;
       }
 
-      ciudadSelect.setChoices(opciones, 'value', 'label', false);
+      // Filtrar ciudades por provincia
+      const ciudadesFiltradas = ciudadesData.filter(ciudad => ciudad.provincia_id == provinciaId);
+      console.log("Ciudades encontradas:", ciudadesFiltradas.length);
 
-      // Forzar selección después de establecer opciones
-      setTimeout(() => {
-        if (ciudadInicial) {
-          const opcion = ciudadSelect._choices.find(c => c.value == ciudadInicial);
-          if (opcion) {
-            ciudadSelect.setChoiceByValue(ciudadInicial);
-            console.log("✅ Ciudad seleccionada correctamente:", ciudadInicial);
-          } else {
-            console.warn("⚠️ Opción no encontrada en _choices:", ciudadInicial);
-          }
+      if (ciudadesFiltradas.length === 0) {
+        console.log("No se encontraron ciudades para esta provincia");
+        return;
+      }
+
+      // Crear opciones
+      const opciones = ciudadesFiltradas.map(ciudad => ({
+        value: ciudad.id.toString(),
+        label: ciudad.nombre
+      }));
+
+      // Añadir opciones
+      ciudadSelect.setChoices(opciones, 'value', 'label', false);
+      console.log("Opciones de ciudad añadidas:", opciones.length);
+
+      // Seleccionar ciudad inicial si corresponde a esta provincia
+      if (ciudadInicial && ciudadInicial !== '') {
+        const ciudadCorrespondiente = ciudadesFiltradas.find(c => c.id == ciudadInicial);
+        if (ciudadCorrespondiente) {
+          setTimeout(() => {
+            ciudadSelect.setChoiceByValue(ciudadInicial.toString());
+            console.log("✅ Ciudad inicial seleccionada:", ciudadInicial);
+          }, 100);
         }
-      }, 100);
+      }
     }
 
+    // Event listener para cambio de provincia
     document.getElementById('id_provincia').addEventListener('change', function(e) {
-      console.log("Provincia cambiada a:", e.target.value);
-      cargarCiudades(e.target.value);
+      const nuevaProvincia = e.target.value;
+      console.log("Provincia cambiada a:", nuevaProvincia);
+      cargarCiudades(nuevaProvincia);
     });
 
-    // Cargar ciudades iniciales
-    if (provinciaInicial) {
-      document.getElementById('id_provincia').value = provinciaInicial;
+    // Inicialización: cargar ciudades si hay provincia inicial
+    if (provinciaInicial && provinciaInicial !== '') {
+      console.log("Inicializando con provincia:", provinciaInicial);
+      // Establecer provincia inicial
+      provinciaSelect.setChoiceByValue(provinciaInicial.toString());
+      // Cargar ciudades correspondientes
       cargarCiudades(provinciaInicial);
     } else {
+      console.log("No hay provincia inicial, limpiando ciudades");
       cargarCiudades(null);
+    }
+
+    // ===== FUNCIÓN FALLBACK SIN CHOICES.JS =====
+    function initVanillaSelects() {
+      console.log("Inicializando selectores vanilla (sin Choices.js)");
+      
+      const provinciaSelect = document.getElementById('id_provincia');
+      const ciudadSelect = document.getElementById('id_ciudad');
+      
+      function cargarCiudadesVanilla(provinciaId) {
+        // Limpiar opciones
+        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+        
+        if (!provinciaId) return;
+        
+        // Filtrar y añadir ciudades
+        const ciudadesFiltradas = ciudadesData.filter(ciudad => ciudad.provincia_id == provinciaId);
+        ciudadesFiltradas.forEach(ciudad => {
+          const option = document.createElement('option');
+          option.value = ciudad.id;
+          option.textContent = ciudad.nombre;
+          if (ciudadInicial && ciudad.id == ciudadInicial) {
+            option.selected = true;
+          }
+          ciudadSelect.appendChild(option);
+        });
+      }
+      
+      // Event listener para provincia
+      provinciaSelect.addEventListener('change', function(e) {
+        cargarCiudadesVanilla(e.target.value);
+      });
+      
+      // Inicialización
+      if (provinciaInicial) {
+        provinciaSelect.value = provinciaInicial;
+        cargarCiudadesVanilla(provinciaInicial);
+      }
     }
   });
 </script>
 
-<!-- Resto de tus scripts -->
+<!-- Resto de scripts originales -->
 <script>
   function vistaPreviaFoto(event) {
     const input = event.target;
@@ -396,7 +444,7 @@
 
   function confirmarEliminar(event) {
     event.preventDefault();
-    const trabajadorId = {{ trabajador.id }};
+    const trabajadorId = {{ trabajador.id|default:0 }};
 
     Swal.fire({
       title: '¿Estás seguro?',
@@ -409,7 +457,7 @@
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`{% url 'trabajadores:eliminar' trabajador.id %}`, {
+        fetch(`{% url 'trabajadores:eliminar' trabajador.id|default:0 %}`, {
           method: 'POST',
           headers: {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
@@ -435,7 +483,6 @@
 
 <!-- ESTILOS MODERNOS PARA CHOICES.JS -->
 <style>
-
   .choices div{
     background-color: white !important; /* Fondo blanco */
     border-radius: 8px;  

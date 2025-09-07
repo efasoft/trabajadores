@@ -84,6 +84,15 @@ class TrabajadorForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
 
+        # ===== CORRECCIÓN 1: INICIALIZAR SIEMPRE LAS OPCIONES DE PROVINCIA =====
+        # Cargar TODAS las provincias siempre
+        provincias_choices = [('', 'Seleccione una provincia')]
+        provincias_choices.extend([(p.id, p.nombre) for p in Provincia.objects.all().order_by('nombre')])
+        self.fields['provincia'].widget.choices = provincias_choices
+
+        # ===== CORRECCIÓN 2: INICIALIZAR OPCIONES DE CIUDAD =====
+        ciudades_choices = [('', 'Seleccione una ciudad')]
+        
         # Inicializar valores si hay instancia
         if self.instance:
             # 1. Asignar todos los campos directamente
@@ -100,34 +109,32 @@ class TrabajadorForm(forms.Form):
             # 3. Asignar provincia y ciudad
             if self.instance.provincia:
                 self.fields['provincia'].initial = self.instance.provincia.id
+                # ===== CORRECCIÓN 3: CARGAR CIUDADES DE LA PROVINCIA EXISTENTE =====
+                ciudades = Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
+                ciudades_choices.extend([(c.id, c.nombre) for c in ciudades])
+                
             if self.instance.ciudad:
                 self.fields['ciudad'].initial = self.instance.ciudad.id
+                # ===== CORRECCIÓN 4: ASEGURAR QUE LA CIUDAD ESTÁ EN LAS OPCIONES =====
+                ciudad_ya_en_lista = any(choice[0] == self.instance.ciudad.id for choice in ciudades_choices)
+                if not ciudad_ya_en_lista:
+                    ciudades_choices.append((self.instance.ciudad.id, self.instance.ciudad.nombre))
 
-            # 4. Cargar opciones de provincia
-            self.fields['provincia'].widget.choices = [
-                (p.id, p.nombre) for p in Provincia.objects.all().order_by('nombre')
-            ]
-
-            # 5. Cargar ciudades de la provincia del modelo
-            if self.instance.provincia:
-                ciudades = Ciudad.objects.filter(provincia=self.instance.provincia).order_by('nombre')
-                self.fields['ciudad'].widget.choices = [(c.id, c.nombre) for c in ciudades]
-                # Asegurar que la ciudad del modelo esté en choices
-                if self.instance.ciudad and self.instance.ciudad.id not in [c.id for c in ciudades]:
-                    self.fields['ciudad'].widget.choices.append((self.instance.ciudad.id, self.instance.ciudad.nombre))
-            else:
-                self.fields['ciudad'].widget.choices = []
-
+        # ===== CORRECCIÓN 5: MANEJO DE POST DATA =====
         # Actualizar ciudades dinámicamente si hay POST
         if 'provincia' in self.data:
             try:
                 provincia_id = int(self.data.get('provincia'))
                 ciudades = Ciudad.objects.filter(provincia_id=provincia_id).order_by('nombre')
-                self.fields['ciudad'].widget.choices = [(c.id, c.nombre) for c in ciudades]
+                ciudades_choices = [('', 'Seleccione una ciudad')]
+                ciudades_choices.extend([(c.id, c.nombre) for c in ciudades])
             except (ValueError, TypeError):
-                self.fields['ciudad'].widget.choices = []
+                ciudades_choices = [('', 'Seleccione una ciudad')]
 
-        if self.instance.email:
+        # ===== ASIGNAR LAS OPCIONES FINALES =====
+        self.fields['ciudad'].widget.choices = ciudades_choices
+
+        if self.instance and self.instance.email:
             self.fields['correo'].initial = self.instance.email                
 
     def clean(self):
