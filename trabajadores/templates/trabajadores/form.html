@@ -11,16 +11,24 @@
           <div class="card-header-p fw-bold mb-4 d-flex justify-content-between align-items-center">
             TRABAJADORES
             <div>
+              <!-- NUEVO: Icono para Guardar/Crear/Editar -->
+              <button type="submit" form="trabajadorForm" class="btn btn-sm" title="{{ accion }}">
+                <i class="fa fa-check icon-btn"
+                    data-bs-toggle="tooltip"
+                    title="{% if accion == 'Editar' %}Editar{% else %}Crear{% endif %}"                     
+                ></i>
+              </button>
+              
               {% if accion == "Editar" %}
-                <a href="#"  class="btn btn-sm" title="Eliminar"> 
+                <a href="#" class="btn btn-sm" title="Eliminar"> 
                   <i class="fa fa-trash icon-btn"
                   onclick="confirmarEliminar({{ trabajador.id }})"
                   data-bs-toggle="tooltip"
                   title="Eliminar" >    
                   </i>             
                 </a>
-
               {% endif %}
+              
               <a href="{% url 'trabajadores:listar' %}" class="btn btn-sm" title="Salir">
                 <i class="fa fa-arrow-right icon-btn"
                     data-bs-toggle="tooltip"
@@ -113,15 +121,15 @@
                 <div class="row g-4">
                   <div class="col-md-4">
                     <label for="id_sueldo_base" class="form-label">Sueldo Base</label>
-                    <input type="number" step="0.01" name="sueldo_base" id="id_sueldo_base" value="{{ form.sueldo_base.value|default_if_none:'' }}" class="form-control">
+                    <input type="text" name="sueldo_base" id="id_sueldo_base" value="{{ form.sueldo_base.value|default_if_none:'' }}" class="form-control text-end">
                   </div>
                   <div class="col-md-4">
                     <label for="id_comision" class="form-label">Comisión (%)</label>
-                    <input type="number" step="0.01" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control">
+                    <input type="text" name="comision" id="id_comision" value="{{ form.comision.value|default_if_none:'' }}" class="form-control text-end">
                   </div>
                   <div class="col-md-4">
                     <label for="id_sueldo_bruto" class="form-label">Sueldo Bruto</label>
-                    <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" class="form-control bg-light" value="{{ form.instance.sueldo_bruto }}" readonly>
+                    <input type="text" id="id_sueldo_bruto" name="sueldo_bruto" class="form-control bg-light text-end" value="{{ form.instance.sueldo_bruto }}" readonly>
                   </div>
                 </div>
               </div>
@@ -167,14 +175,23 @@
               </div>
             </div>
 
-            <!-- Botones -->
-            <div class="d-flex justify-content-between mt-4">
-              <button type="submit" class="btn btn-primary px-4 py-3 btn-gradient">
-                <i class="fa fa-save me-1"></i>{{ accion }}
-              </button>
-              <a href="{% url 'trabajadores:listar' %}" class="btn btn-dark px-4 py-3 btn-gradient">
-                <i class="fa fa-times me-1"></i>Cancelar
+            <!-- NUEVOS ICONOS EN LUGAR DE BOTONES -->
+            <div class="d-flex justify-content-end mt-4">
+              <!-- Icono Cancelar -->
+              <a href="{% url 'trabajadores:listar' %}" class="btn btn-sm me-3" title="Cancelar">
+                <i class="fa fa-times icon-btn"
+                    data-bs-toggle="tooltip"
+                    title="Cancelar"                     
+                ></i>
               </a>
+              
+              <!-- Icono Guardar (submit del formulario) -->
+              <button type="submit" class="btn btn-sm" title="{{ accion }}">
+                <i class="fa fa-check icon-btn"
+                    data-bs-toggle="tooltip"
+                    title="{% if accion == 'Editar' %}Guardar Cambios{% else %}Crear Trabajador{% endif %}"                     
+                ></i>
+              </button>
             </div>
           </form>
 
@@ -192,19 +209,59 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-<!-- FLATPICKR para fecha -->
+<!-- FLATPICKR para fecha con botones Hoy y Limpiar -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const fechaInput = document.getElementById("id_fecha");
     if (fechaInput) {
-      flatpickr(fechaInput, {
+      const fp = flatpickr(fechaInput, {
         locale: "es",
         dateFormat: "d/m/Y",
         altInput: true,
         altFormat: "d/m/Y",
         allowInput: true,
         clickOpens: true,
-        position: "above"
+        position: "above",
+        // Personalización para agregar botones
+        onReady: function(selectedDates, dateStr, instance) {
+          // Crear contenedor para los botones
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'flatpickr-buttons';
+          buttonContainer.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-top: 1px solid #e3e3e3;
+            background-color: #f8f9fa;
+            gap: 8px;
+          `;
+
+          // Botón "Hoy"
+          const todayBtn = document.createElement('button');
+          todayBtn.type = 'button';
+          todayBtn.textContent = 'Hoy';
+          todayBtn.className = 'btn btn-sm btn-primary';
+          todayBtn.style.cssText = 'font-size: 0.8rem; padding: 4px 12px;';
+          todayBtn.onclick = function() {
+            instance.setDate(new Date(), true);
+          };
+
+          // Botón "Limpiar"
+          const clearBtn = document.createElement('button');
+          clearBtn.type = 'button';
+          clearBtn.textContent = 'Limpiar';
+          clearBtn.className = 'btn btn-sm btn-secondary';
+          clearBtn.style.cssText = 'font-size: 0.8rem; padding: 4px 12px;';
+          clearBtn.onclick = function() {
+            instance.clear();
+          };
+
+          buttonContainer.appendChild(todayBtn);
+          buttonContainer.appendChild(clearBtn);
+
+          // Añadir los botones al calendario
+          instance.calendarContainer.appendChild(buttonContainer);
+        }
       });
     }
   });
@@ -362,6 +419,12 @@
         cargarCiudadesVanilla(provinciaInicial);
       }
     }
+    
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
   });
 </script>
 
@@ -385,62 +448,157 @@
     pwd.type = pwd.type === "password" ? "text" : "password";
   }
 
-  const baseInput = document.getElementById("id_sueldo_base");
-  const comisionInput = document.getElementById("id_comision");
-  const brutoInput = document.getElementById("id_sueldo_bruto");
-  function calcularBruto() {
-    const base = parseFloat(baseInput.value) || 0;
-    const comision = parseFloat(comisionInput.value) || 0;
-    brutoInput.value = (base + comision).toFixed(2);
+// FUNCIONES CORREGIDAS PARA EL FORMATEO DE NÚMEROS
+
+  function formatNumber(num) {
+      if (!num || num === '' || num === '0' || num === 0) return '';
+      
+      // Convertir a número si es string
+      let cleanNumber = typeof num === 'string' ? parseFloat(num) : num;
+      
+      if (isNaN(cleanNumber)) return '';
+      
+      // Formatear con separadores de miles pero SIN dividir por 100
+      return cleanNumber.toLocaleString('es-ES', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+      });
   }
-  baseInput.addEventListener('input', calcularBruto);
-  comisionInput.addEventListener('input', calcularBruto);
 
-  document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const url = form.action || window.location.pathname;
+  function unformatNumber(str) {
+      if (!str) return '';
+      // Remover separadores de miles (puntos) y convertir coma decimal a punto
+      // NO multiplicar por 100
+      return str.toString().replace(/\./g, '').replace(',', '.');
+  }
 
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
-        },
-        body: formData
-      });
+  // APLICAR FORMATO INICIAL A LOS CAMPOS NUMÉRICOS - VERSIÓN CORREGIDA
+  document.addEventListener('DOMContentLoaded', function() {
+      const baseInput = document.getElementById("id_sueldo_base");
+      const comisionInput = document.getElementById("id_comision");
+      const brutoInput = document.getElementById("id_sueldo_bruto");
 
-      const data = await response.json();
-
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Éxito',
-          text: data.message,
-          confirmButtonColor: '#28a745'
-        }).then(() => {
-          window.location.href = "{% url 'trabajadores:listar' %}";
-        });
-      } else {
-        let html = '';
-        data.errors.forEach(err => {
-          html += `<div>• ${err}</div>`;
-        });
-        Swal.fire({
-          icon: 'error',
-          title: 'Errores de validación',
-          html: html,
-          confirmButtonColor: '#e74c3c'
-        });
+      // Formatear valores iniciales si existen - SIN MULTIPLICAR
+      if (baseInput.value && baseInput.value !== '') {
+          // Si el valor viene del servidor, formatearlo directamente
+          baseInput.value = formatNumber(parseFloat(baseInput.value));
       }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error del servidor',
-        text: 'Ocurrió un error inesperado. Intenta nuevamente.'
+      if (comisionInput.value && comisionInput.value !== '') {
+          comisionInput.value = formatNumber(parseFloat(comisionInput.value));
+      }
+      if (brutoInput.value && brutoInput.value !== '') {
+          brutoInput.value = formatNumber(parseFloat(brutoInput.value));
+      }
+
+      function calcularBruto() {
+          const baseValue = unformatNumber(baseInput.value) || 0;
+          const comisionValue = unformatNumber(comisionInput.value) || 0;
+          const base = parseFloat(baseValue) || 0;
+          const comision = parseFloat(comisionValue) || 0;
+          const bruto = base + comision;
+          brutoInput.value = formatNumber(bruto);
+      }
+
+      // Event listeners para formateo automático en Sueldo Base
+      baseInput.addEventListener('blur', function() {
+          if (this.value && this.value !== '') {
+              const unformatted = unformatNumber(this.value);
+              this.value = formatNumber(parseFloat(unformatted));
+          }
+          calcularBruto();
       });
-    }
+
+      baseInput.addEventListener('focus', function() {
+          this.value = unformatNumber(this.value);
+      });
+
+      // Event listeners para formateo automático en Comisión
+      comisionInput.addEventListener('blur', function() {
+          if (this.value && this.value !== '') {
+              const unformatted = unformatNumber(this.value);
+              this.value = formatNumber(parseFloat(unformatted));
+          }
+          calcularBruto();
+      });
+
+      comisionInput.addEventListener('focus', function() {
+          this.value = unformatNumber(this.value);
+      });
+
+      // Cálculo automático en tiempo real
+      baseInput.addEventListener('input', calcularBruto);
+      comisionInput.addEventListener('input', calcularBruto);
+
+      // Calcular bruto inicial
+      calcularBruto();
+  });
+
+  // MANEJO DEL FORMULARIO - VERSIÓN CORREGIDA
+  document.getElementById('trabajadorForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      
+      // Desformatear valores antes del envío
+      const baseInput = document.getElementById("id_sueldo_base");
+      const comisionInput = document.getElementById("id_comision");
+      
+      const baseOriginal = baseInput.value;
+      const comisionOriginal = comisionInput.value;
+      
+      // Desformatear para envío al servidor
+      baseInput.value = unformatNumber(baseOriginal);
+      comisionInput.value = unformatNumber(comisionOriginal);
+      
+      const formData = new FormData(form);
+      const url = form.action || window.location.pathname;
+
+      try {
+          const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                  "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+              },
+              body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+              Swal.fire({
+                  icon: 'success',
+                  title: 'Éxito',
+                  text: data.message,
+                  confirmButtonColor: '#28a745'
+              }).then(() => {
+                  window.location.href = "{% url 'trabajadores:listar' %}";
+              });
+          } else {
+              let html = '';
+              data.errors.forEach(err => {
+                  html += `<div>• ${err}</div>`;
+              });
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Errores de validación',
+                  html: html,
+                  confirmButtonColor: '#e74c3c'
+              });
+              
+              // Restaurar formato en caso de error
+              baseInput.value = baseOriginal;
+              comisionInput.value = comisionOriginal;
+          }
+      } catch (error) {
+          Swal.fire({
+              icon: 'error',
+              title: 'Error del servidor',
+              text: 'Ocurrió un error inesperado. Intenta nuevamente.'
+          });
+          
+          // Restaurar formato en caso de error
+          baseInput.value = baseOriginal;
+          comisionInput.value = comisionOriginal;
+      }
   });
 
   function confirmarEliminar(trabajadorId) {
@@ -549,7 +707,21 @@
     font-size: 1.45rem;    
   }
 
+  /* Estilos para los botones de flatpickr */
+  .flatpickr-buttons {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 8px !important;
+    border-top: 1px solid #e3e3e3 !important;
+    background-color: #f8f9fa !important;
+    gap: 8px !important;
+  }
 
+  .flatpickr-buttons .btn {
+    font-size: 0.8rem !important;
+    padding: 4px 12px !important;
+    border-radius: 4px !important;
+  }
 </style>
 
 {% endblock %}
