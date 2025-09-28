@@ -73,6 +73,25 @@ class TrabajadorForm(forms.Form):
         required=False,
         label="Código Postal"
     )
+    
+    # NUEVOS CAMPOS AGREGADOS
+    direccion = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Ej: Calle Mayor 123, 1º A'
+        }),
+        required=False,
+        label="Dirección"
+    )
+    referencia = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 
+            'rows': 3, 
+            'placeholder': 'Referencias adicionales para localizar la dirección (opcional)'
+        }),
+        required=False,
+        label="Referencia"
+    )
 
     def __init__(self, *args, **kwargs):
         data = kwargs.get('data', None)
@@ -106,7 +125,13 @@ class TrabajadorForm(forms.Form):
             if self.instance.email:
                 self.fields['correo'].initial = self.instance.email
 
-            # 3. Asignar provincia y ciudad
+            # 3. Asignar campos nuevos si existen en la instancia
+            if hasattr(self.instance, 'direccion') and self.instance.direccion:
+                self.fields['direccion'].initial = self.instance.direccion
+            if hasattr(self.instance, 'referencia') and self.instance.referencia:
+                self.fields['referencia'].initial = self.instance.referencia
+
+            # 4. Asignar provincia y ciudad
             if self.instance.provincia:
                 self.fields['provincia'].initial = self.instance.provincia.id
                 # ===== CORRECCIÓN 3: CARGAR CIUDADES DE LA PROVINCIA EXISTENTE =====
@@ -161,6 +186,9 @@ class TrabajadorForm(forms.Form):
                 "provincia": cleaned_data.get("provincia"),
                 "ciudad": cleaned_data.get("ciudad"),
                 "codigo_postal": cleaned_data.get("codigo_postal"),
+                # NUEVOS CAMPOS
+                "direccion": cleaned_data.get("direccion"),
+                "referencia": cleaned_data.get("referencia"),
             }
 
             validated = TrabajadorModel(**data_for_pydantic)
@@ -181,7 +209,6 @@ class TrabajadorForm(forms.Form):
         except Exception as e:
             self.add_error(None, "Error en los datos ingresados. Revise todos los campos.")
 
-
         return cleaned_data
 
     def save(self, commit=True):
@@ -197,7 +224,9 @@ class TrabajadorForm(forms.Form):
         fields_to_assign = [
             'nombres', 'apellidos', 'edad',
             'telefono_casa', 'telefono_movil', 'sueldo_base',
-            'comision', 'password', 'foto', 'activo', 'codigo_postal'
+            'comision', 'password', 'foto', 'activo', 'codigo_postal',
+            # NUEVOS CAMPOS
+            'direccion', 'referencia'
         ]
         for field in fields_to_assign:
             value = self.cleaned_data.get(field)

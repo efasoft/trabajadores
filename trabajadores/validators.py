@@ -32,6 +32,10 @@ class TrabajadorModel(BaseModel):
     provincia: Optional[str] = None
     ciudad: Optional[str] = None
     codigo_postal: Optional[str] = None
+    
+    # NUEVOS CAMPOS AGREGADOS
+    direccion: Optional[str] = None  # Campo obligatorio
+    referencia: Optional[str] = None  # Campo opcional
 
     # Validadores de campo
 
@@ -191,6 +195,46 @@ class TrabajadorModel(BaseModel):
         v = v.strip()
         if not re.match(r'^[0-9]{4,10}$', v):
             raise ValueError("Código Postal inválido (solo números, entre 4 y 10 dígitos)")
+        return v
+
+    # NUEVO VALIDADOR PARA DIRECCION
+    @field_validator('direccion')
+    def validar_direccion(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Debe ingresar una dirección")
+        v = v.strip()
+        if len(v) < 10:
+            raise ValueError("La dirección debe tener al menos 10 caracteres")
+        if len(v) > 255:
+            raise ValueError("La dirección no puede superar 255 caracteres")
+        
+        # Validar que contenga al menos números y letras (dirección básica)
+        if not re.search(r'[0-9]', v):
+            raise ValueError("La dirección debe contener al menos un número")
+        if not re.search(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]', v):
+            raise ValueError("La dirección debe contener letras")
+        
+        # Validar caracteres permitidos
+        if not re.match(r'^[a-zA-Z0-9\s,\.áéíóúÁÉÍÓÚñÑ#º°\-]+$', v):
+            raise ValueError("La dirección contiene caracteres no permitidos")
+        
+        return v
+
+    # NUEVO VALIDADOR PARA REFERENCIA (OPCIONAL)
+    @field_validator('referencia')
+    def validar_referencia(cls, v):
+        # Campo opcional, puede ser None o vacío
+        if v is None or v.strip() == '':
+            return v
+        
+        v = v.strip()
+        if len(v) > 500:
+            raise ValueError("La referencia no puede superar 500 caracteres")
+        
+        # Validar caracteres básicos para referencia
+        if not re.match(r'^[a-zA-Z0-9\s,\.\-áéíóúÁÉÍÓÚñÑ#º°()]+$', v):
+            raise ValueError("La referencia contiene caracteres no permitidos")
+            
         return v
 
     @model_validator(mode="after")

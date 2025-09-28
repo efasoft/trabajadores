@@ -32,10 +32,14 @@ class Trabajador(models.Model):
     foto = models.ImageField(upload_to='fotos_trabajadores/')  # <-- obligatorio ahora
     password = models.CharField(max_length=128)
 
-    # NUEVOS CAMPOS
+    # CAMPOS EXISTENTES
     provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
     ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT)
     codigo_postal = models.CharField(max_length=10)  # <-- obligatorio
+
+    # NUEVOS CAMPOS AGREGADOS
+    direccion = models.CharField(max_length=255)  # Campo obligatorio
+    referencia = models.TextField(blank=True, null=True)  # Campo opcional
 
     @property
     def sueldo_bruto(self):
